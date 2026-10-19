@@ -5,6 +5,8 @@
 > 当前版本 **1.0.0**（2026-10-19），已完成 25102RKBEC 真机验证（Android 17 / LSPosed 2.2.1 / 网易云音乐 9.6.08）。
 > 与网易官方无任何关联，仅供学习研究和个人设备使用。
 
+**仓库**：<https://github.com/yigenhuobah/cloudmusictool> ｜ **下载**：[Releases](https://github.com/yigenhuobah/cloudmusictool/releases)
+
 ## 兼容性
 
 | 项 | 值 |
