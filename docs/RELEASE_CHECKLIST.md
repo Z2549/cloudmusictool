@@ -88,3 +88,28 @@ gradlew.bat :app:assembleRelease
 - [ ] git init / 提交 / tag v1.0.0
 - [ ] LSPosed 官方仓库 tag `2-1.0.0` + 上传 release APK 与 mapping.txt
 - [ ] 发布说明（含 UI-02/UI-04 暂不支持、目标版本 9.6.08、隐私默认关闭）
+
+---
+
+## 8. LSPosed 官方仓库提交（1.0.0，2026-10-19）
+
+已完成：
+
+- [x] 提交 issue：https://github.com/Xposed-Modules-Repo/submission/issues/2223（`[submission] io.github.yigenhuobah.cloudmusictool`）
+- [x] 机器人已建仓库：https://github.com/Xposed-Modules-Repo/io.github.yigenhuobah.cloudmusictool
+
+**待人工完成（需浏览器，API 权限不足）**：
+
+1. 接受协作者邀请：https://github.com/Xposed-Modules-Repo/io.github.yigenhuobah.cloudmusictool/invitations
+2. 在网页把仓库 Description 设为「云音乐工具箱」，Homepage 设为 https://github.com/yigenhuobah/cloudmusictool
+3. 推送元数据文件（内容已备份在 `dist/xmr-repo/`）：
+   - `SUMMARY`：一行模块简介
+   - `README.md`：模块说明页
+4. 创建 Release：
+   - 标题 `1.0.0`
+   - tag `2-1.0.0`（versionCode-versionName）
+   - 上传 `dist/cloudmusictool-1.0.0.apk`
+   - 正文填 CHANGELOG 1.0.0 内容
+5. 等约 5 分钟，模块会自动出现在 LSPosed「模块仓库」与 modules.lsposed.org
+
+注意：只改 Release 里的 APK 附件不会触发机器人更新，必须同时修改 Release 内容。
