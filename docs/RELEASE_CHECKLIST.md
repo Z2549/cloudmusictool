@@ -113,3 +113,14 @@ gradlew.bat :app:assembleRelease
 5. 等约 5 分钟，模块会自动出现在 LSPosed「模块仓库」与 modules.lsposed.org
 
 注意：只改 Release 里的 APK 附件不会触发机器人更新，必须同时修改 Release 内容。
+
+### 官方仓库已完成（2026-10-19）
+
+- [x] 接受协作者邀请（push 权限已生效）
+- [x] 推送元数据：`SUMMARY` + `README.md` → main 分支
+- [x] Release 已创建：tag `2-1.0.0`，标题 `1.0.0`，附件 `cloudmusictool-1.0.0.apk`
+  https://github.com/Xposed-Modules-Repo/io.github.yigenhuobah.cloudmusictool/releases
+- [ ] **Description 需网页设置**（API 对 maintain 角色返回 404，机器人文档亦说明须浏览器操作）：
+  打开 https://github.com/Xposed-Modules-Repo/io.github.yigenhuobah.cloudmusictool
+  点右侧设置图标，Description 填「云音乐工具箱」，Website 填 https://github.com/yigenhuobah/cloudmusictool
+  → 不填 Description 模块不会出现在 LSPosed 仓库列表
