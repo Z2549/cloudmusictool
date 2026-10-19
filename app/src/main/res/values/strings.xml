@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">云音乐工具箱</string>
+    <string name="module_description">网易云音乐净化与体验优化：去广告、精简界面、跳过启动延迟、隐私加固。</string>
+
+    <!-- 界面外壳 -->
+    <string name="about">关于</string>
+    <string name="about_title">关于云音乐工具箱</string>
+    <string name="about_body">版本 %1$s\n目标应用：网易云音乐 9.6.08 · libxposed API 102\n\n本模块与网易官方无任何关联，仅供学习、研究和个人设备使用。使用风险由使用者自行承担。\n\nGitHub:\ngithub.com/yigenhuobah/cloudmusictool</string>
+    <string name="status_title">模块状态</string>
+    <string name="status_active">已激活</string>
+    <string name="status_connected">框架已连接</string>
+    <string name="status_inactive">未激活</string>
+    <string name="status_connecting">正在连接框架…</string>
+    <string name="status_unsupported">目标版本未适配</string>
+    <string name="status_detail_active">框架 API %1$d · 已注入网易云音乐</string>
+    <string name="status_detail_no_scope">框架已连接，但作用域未勾选网易云音乐</string>
+    <string name="status_detail_not_running">启动网易云音乐后生效。若已启动仍显示此状态，请检查模块是否已在 LSPosed 中启用</string>
+    <string name="status_detail_inactive">请在 LSPosed 中启用本模块并勾选网易云音乐</string>
+    <string name="status_detail_connecting">绑定成功后自动刷新</string>
+    <string name="status_detail_unsupported">当前版本 %1$s 未适配（官方适配：9.6.08）</string>
+
+    <!-- 底栏 -->
+    <string name="nav_features">功能</string>
+    <string name="nav_home">首页定制</string>
+    <string name="nav_about">关于</string>
+
+    <!-- 分组 -->
+    <string name="group_ads">广告拦截</string>
+    <string name="group_ui">界面与启动</string>
+    <string name="group_privacy">隐私与上报</string>
+
+    <!-- 功能页页脚 -->
+    <string name="footer_limits">说明：Phase 0-5 功能已全部实装。隐私与监控类功能默认关闭，可按需开启。</string>
+    <string name="footer_hint">修改后自动同步至目标进程。若部分项未立即生效，请重启网易云音乐。</string>
+
+    <!-- 功能清单 -->
+    <string name="f_ad_01_title">开屏广告跳过</string>
+    <string name="f_ad_01_summary">拦截开屏广告展示、清空广告缓存并秒退广告落地页</string>
+    <string name="f_ad_02_title">运营弹窗屏蔽</string>
+    <string name="f_ad_02_summary">屏蔽应用启动时的各类运营推广及营销弹窗（保留登录弹窗）</string>
+    <string name="f_ad_03_title">更新弹窗屏蔽</string>
+    <string name="f_ad_03_summary">屏蔽版本检查与强制更新对话框，保持当前版本安宁</string>
+    <string name="f_ad_04_title">首页信息流广告</string>
+    <string name="f_ad_04_summary">移除发现页与推荐流中的推广卡片</string>
+    <string name="f_ad_05_title">评论区广告</string>
+    <string name="f_ad_05_summary">移除评论区广告横幅与推广组件</string>
+    <string name="f_ad_06_title">播放页广告</string>
+    <string name="f_ad_06_summary">移除黑胶唱片界面送礼与推广贴纸</string>
+    <string name="f_ad_07_title">音频贴片广告</string>
+    <string name="f_ad_07_summary">拦截音频起播贴片与播客内插广告</string>
+    <string name="f_ad_08_title">广告上报与外跳拦截</string>
+    <string name="f_ad_08_summary">阻断广告统计上报，拦截静默拉起外部电商或推广应用</string>
+
+    <string name="f_ui_05_title">跳过启动延迟</string>
+    <string name="f_ui_05_summary">绕过 StartTimeHandler 红屏停留计时，立即执行启动任务</string>
+    <string name="f_ui_01_title">首页模块净化</string>
+    <string name="f_ui_01_summary">自定义隐藏发现页各推荐板块</string>
+    <string name="f_ui_02_title">顶部频道管理</string>
+    <string name="f_ui_02_summary">解锁官方顶部频道删除与排序限制</string>
+    <string name="f_ui_03_title">底部导航精简</string>
+    <string name="f_ui_03_summary">自定义精简底部导航栏 Tab</string>
+    <string name="f_ui_04_title">侧栏抽屉精简</string>
+    <string name="f_ui_04_summary">自定义隐藏侧栏抽屉中的推广与冗余项目（默认关闭）</string>
+    <string name="f_ui_06_title">引导与气泡屏蔽</string>
+    <string name="f_ui_06_summary">屏蔽各类引导气泡、评分弹窗、青少年弹窗及权限引导</string>
+    <string name="f_ui_07_title">禁止自动播放</string>
+    <string name="f_ui_07_summary">禁止冷启动或切歌时自动播放音频</string>
+    <string name="f_ui_08_title">强制深色模式（实验性）</string>
+    <string name="f_ui_08_summary">强制开启夜间深色主题外观（实验性，默认关闭）</string>
+    <string name="f_ui_09_title">关闭头像挂件</string>
+    <string name="f_ui_09_summary">屏蔽个人主页与评论区头像挂件与装饰</string>
+
+    <string name="f_pv_01_title">OAID 与设备追踪拦截</string>
+    <string name="f_pv_01_summary">阻断 OAID 读取与设备指纹上报</string>
+    <string name="f_pv_02_title">日志写盘任务屏蔽</string>
+    <string name="f_pv_02_summary">屏蔽 NeedLogToFileTask 与 NBLogTask 日志落盘任务</string>
+    <string name="f_pv_03_title">启动任务黑名单</string>
+    <string name="f_pv_03_summary">拦截启动黑名单中的非必要任务与追踪组件</string>
+    <string name="f_pv_04_title">APM 上报抑制</string>
+    <string name="f_pv_04_summary">抑制 APM 性能数据上报与后台强制上传</string>
+    <string name="f_pv_05_title">统计数据上报观测</string>
+    <string name="f_pv_05_summary">仅观测并记录统计上报日志，不拦截业务调用</string>
+
+    <!-- 首页定制页 -->
+    <string name="home_customize_title">首页与导航定制</string>
+    <string name="home_customize_top_channel_disabled">当前版本数据链路未接通，暂不生效</string>
+    <string name="home_customize_hint">本页配置已持久化至远程配置；底层的 Hook 过滤已启用，修改后重启网易云音乐生效。</string>
+    <string name="home_blocks_title">发现页推荐卡片隐藏</string>
+    <string name="home_blocks_summary">勾选需要在首页过滤的卡片类型</string>
+    <string name="home_channels_title">顶部频道保留</string>
+    <string name="home_channels_summary">保留需要的顶部频道项</string>
+    <string name="home_drawer_title">侧栏抽屉精简</string>
+    <string name="home_drawer_summary">勾选在抽屉菜单中隐藏的推广项目</string>
+    <string name="home_bottom_nav_title">底部导航保留</string>
+    <string name="home_bottom_nav_summary">保留需要的底部导航 Tab</string>
+
+    <!-- 关于页详细 -->
+    <string name="about_app_header">云音乐工具箱 (CloudMusicTool)</string>
+    <string name="about_version_format">模块版本：%1$s (Code %2$d)</string>
+    <string name="about_scope_label">目标作用域</string>
+    <string name="about_scope_value">com.netease.cloudmusic</string>
+    <string name="about_target_ver_label">适配目标版本</string>
+    <string name="about_target_ver_value">9.6.08 (VersionCode 9006008)</string>
+    <string name="about_api_label">libxposed API</string>
+    <string name="about_api_value">API 102 (Modern Exception Protective)</string>
+    <string name="about_disclaimer_title">免责声明</string>
+    <string name="about_disclaimer_content">本模块为开源 Xposed/LSPosed 模块，所有代码仅供学习研究、代码逆向工程实践及个人无障碍体验改善之用。严禁用于任何商业目的、付费破解或绕过版权保护行为。因使用本模块产生的一切后果均由使用者自行承担。</string>
+    <string name="about_source_title">开源主页</string>
+    <string name="about_source_url">https://github.com/yigenhuobah/cloudmusictool</string>
+</resources>

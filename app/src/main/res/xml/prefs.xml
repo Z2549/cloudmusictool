@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <Preference
+        android:key="status"
+        android:layout="@layout/preference_status_card"
+        android:selectable="false" />
+
+    <PreferenceCategory android:title="@string/group_ads">
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ads"
+            android:key="ad_01_splash" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ads"
+            android:key="ad_02_launch_dialog" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ads"
+            android:key="ad_03_update_dialog" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ads"
+            android:key="ad_08_report_jump" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ads"
+            android:key="ad_04_feed" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ads"
+            android:key="ad_05_comment" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ads"
+            android:key="ad_06_player" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ads"
+            android:key="ad_07_audio_clip" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/group_ui">
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ui"
+            android:key="ui_05_startup_delay" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ui"
+            android:key="ui_01_home_blocks" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ui"
+            android:key="ui_02_top_channel" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ui"
+            android:key="ui_03_bottom_nav" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ui"
+            android:key="ui_04_drawer" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ui"
+            android:key="ui_06_hints" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ui"
+            android:key="ui_07_autoplay" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ui"
+            android:key="ui_08_dark_mode" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ui"
+            android:key="ui_09_pendant" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/group_privacy">
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_privacy"
+            android:key="pv_01_oaid" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_privacy"
+            android:key="pv_02_log_tasks" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_privacy"
+            android:key="pv_03_startup_blacklist" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_privacy"
+            android:key="pv_04_apm" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_privacy"
+            android:key="pv_05_stats_observe" />
+
+    </PreferenceCategory>
+
+    <Preference
+        android:key="footer_limits"
+        android:layout="@layout/preference_footer"
+        android:selectable="false" />
+
+    <Preference
+        android:key="footer_hint"
+        android:layout="@layout/preference_footer"
+        android:selectable="false" />
+
+</PreferenceScreen>

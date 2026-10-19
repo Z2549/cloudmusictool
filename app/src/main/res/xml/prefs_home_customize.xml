@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="@string/home_customize_title">
+
+        <com.cloudmusictool.app.MultiSelectPreference
+            android:key="home_blocks_filter"
+            android:title="@string/home_blocks_title"
+            android:summary="@string/home_blocks_summary" />
+
+        <com.cloudmusictool.app.MultiSelectPreference
+            android:key="top_channels_keep"
+            android:title="@string/home_channels_title"
+            android:summary="@string/home_channels_summary" />
+
+        <com.cloudmusictool.app.MultiSelectPreference
+            android:key="drawer_items_filter"
+            android:title="@string/home_drawer_title"
+            android:summary="@string/home_drawer_summary" />
+
+        <com.cloudmusictool.app.MultiSelectPreference
+            android:key="bottom_nav_keep"
+            android:title="@string/home_bottom_nav_title"
+            android:summary="@string/home_bottom_nav_summary" />
+
+    </PreferenceCategory>
+
+    <Preference
+        android:key="footer_home_custom_hint"
+        android:layout="@layout/preference_footer"
+        android:selectable="false" />
+
+</PreferenceScreen>
