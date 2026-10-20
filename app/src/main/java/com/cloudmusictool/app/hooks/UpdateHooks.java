@@ -3,6 +3,7 @@ package com.cloudmusictool.app.hooks;
 import android.content.Context;
 
 import com.cloudmusictool.app.Feature;
+import com.cloudmusictool.app.dexkit.DexKitAnchors;
 
 import java.lang.reflect.Method;
 
@@ -44,8 +45,7 @@ public final class UpdateHooks {
     }
 
     private static void hookCMUpdateConfig(XposedModule module, ClassLoader cl, Feature f) {
-        Class<?> configCls = HookKit.findClass(module, f, cl, "com.netease.cloudmusic.appupdate.CMUpdateConfig",
-                "CMUpdateConfig");
+        Class<?> configCls = HookKit.findClass(module, f, cl, "com.netease.cloudmusic.appupdate.CMUpdateConfig");
         if (configCls == null) {
             return;
         }
@@ -55,7 +55,8 @@ public final class UpdateHooks {
     }
 
     private static void hookUpdateD(XposedModule module, ClassLoader cl, Feature f) {
-        Class<?> dCls = HookKit.findClass(module, f, cl, "com.netease.cloudmusic.appupdate.d", "CMUpdateConfig");
+        Class<?> dCls = HookKit.findClass(module, f, cl, "com.netease.cloudmusic.appupdate.d",
+                DexKitAnchors.APPUPDATE_D);
         if (dCls == null) {
             return;
         }
@@ -69,8 +70,7 @@ public final class UpdateHooks {
     }
 
     private static void hookUpdateInfo(XposedModule module, ClassLoader cl, Feature f) {
-        Class<?> updateInfoCls = HookKit.findClass(module, f, cl, "com.netease.cloudmusic.appupdate.meta.UpdateInfo",
-                "UpdateInfo");
+        Class<?> updateInfoCls = HookKit.findClass(module, f, cl, "com.netease.cloudmusic.appupdate.meta.UpdateInfo");
         if (updateInfoCls == null) {
             return;
         }
@@ -84,7 +84,7 @@ public final class UpdateHooks {
     }
 
     private static void hookFw0E(XposedModule module, ClassLoader cl, Feature f) {
-        Class<?> eCls = HookKit.findClass(module, f, cl, "fw0.e");
+        Class<?> eCls = HookKit.findClass(module, f, cl, "fw0.e", DexKitAnchors.FW0_E);
         if (eCls == null) {
             return;
         }

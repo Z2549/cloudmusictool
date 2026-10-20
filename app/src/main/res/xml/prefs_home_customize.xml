@@ -14,11 +14,6 @@
             android:summary="@string/home_channels_summary" />
 
         <com.cloudmusictool.app.MultiSelectPreference
-            android:key="drawer_items_filter"
-            android:title="@string/home_drawer_title"
-            android:summary="@string/home_drawer_summary" />
-
-        <com.cloudmusictool.app.MultiSelectPreference
             android:key="bottom_nav_keep"
             android:title="@string/home_bottom_nav_title"
             android:summary="@string/home_bottom_nav_summary" />

@@ -40,6 +40,7 @@ public final class Hooks {
             HookState.enable(f);
             installOne(module, cl, f, config);
         }
+        HookState.flush();
     }
 
     /** :play 进程只安装音频贴片拦截。 */
@@ -51,6 +52,7 @@ public final class Hooks {
         }
         HookState.enable(f);
         installOne(module, cl, f, config);
+        HookState.flush();
     }
 
     private static void installOne(XposedModule module, ClassLoader cl, Feature f, Config config) {
@@ -67,6 +69,12 @@ public final class Hooks {
                     break;
                 case AD_REPORT_JUMP:
                     AdReportHooks.install(module, cl);
+                    break;
+                case SEARCH_AD:
+                    SearchAdHooks.install(module, cl, f);
+                    break;
+                case AD_PRELOAD:
+                    AdPreloadHooks.install(module, cl, f);
                     break;
                 case FEED_AD:
                     FeedAdHooks.install(module, cl);
@@ -88,6 +96,24 @@ public final class Hooks {
                     break;
                 case TOP_CHANNELS:
                     TopTabHooks.install(module, cl, config);
+                    break;
+                case PLAYER_HINTS:
+                    PlayerHintHooks.install(module, cl, f);
+                    break;
+                case SEARCH_GUIDE:
+                    SearchGuideHooks.install(module, cl, f);
+                    break;
+                case PODCAST_GUIDE:
+                    PodcastGuideHooks.install(module, cl, f);
+                    break;
+                case WIDGET_PUSH_GUIDE:
+                    WidgetPushGuideHooks.install(module, cl, f);
+                    break;
+                case LYRICS_HINT:
+                    LyricsHintHooks.install(module, cl, f);
+                    break;
+                case COMMUNITY_LIVE:
+                    CommunityLiveHooks.install(module, cl, f);
                     break;
                 case BOTTOM_NAV:
                     BottomTabHooks.install(module, cl, config);
@@ -118,6 +144,16 @@ public final class Hooks {
                     break;
                 case STATS_OBSERVE:
                     StatisticHooks.install(module, cl);
+                    break;
+                case CLIPBOARD:
+                    ClipboardHooks.install(module, cl, f);
+                    break;
+                case STARTUP_ORCHESTRATION:
+                    StartupOrchestrationHooks.install(module, cl, f);
+                    break;
+                case DRAWER:
+                    // UI-04 当前 blocked，installAll 不会走到这里；保留分支保证 switch 与 Feature 一一对应。
+                    module.log(Log.INFO, TAG, f.id + " blocked: " + f.blockedReason);
                     break;
                 default:
                     module.log(Log.INFO, TAG, f.id + " pending implementation in later phase");

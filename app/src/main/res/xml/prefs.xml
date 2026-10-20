@@ -6,6 +6,11 @@
         android:layout="@layout/preference_status_card"
         android:selectable="false" />
 
+    <Preference
+        android:key="status_diagnostics"
+        android:title="@string/status_diagnostics_title"
+        android:selectable="false" />
+
     <PreferenceCategory android:title="@string/group_ads">
 
         <com.cloudmusictool.app.MaterialSwitchPreference
@@ -23,6 +28,14 @@
         <com.cloudmusictool.app.MaterialSwitchPreference
             android:icon="@drawable/ic_ads"
             android:key="ad_08_report_jump" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ads"
+            android:key="ad_09_search_ad" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ads"
+            android:key="ad_10_ad_preload" />
 
         <com.cloudmusictool.app.MaterialSwitchPreference
             android:icon="@drawable/ic_ads"
@@ -80,6 +93,30 @@
             android:icon="@drawable/ic_ui"
             android:key="ui_09_pendant" />
 
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ui"
+            android:key="ui_10_player_hints" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ui"
+            android:key="ui_11_search_guide" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ui"
+            android:key="ui_12_podcast_guide" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ui"
+            android:key="ui_13_widget_push_guide" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ui"
+            android:key="ui_14_lyrics_hint" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_ui"
+            android:key="ui_15_community_live" />
+
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/group_privacy">
@@ -103,6 +140,14 @@
         <com.cloudmusictool.app.MaterialSwitchPreference
             android:icon="@drawable/ic_privacy"
             android:key="pv_05_stats_observe" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_privacy"
+            android:key="pv_06_clipboard" />
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_privacy"
+            android:key="pv_07_startup_orchestration" />
 
     </PreferenceCategory>
 

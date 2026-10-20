@@ -31,5 +31,14 @@
 -keep class com.google.flatbuffers.** { *; }
 -dontwarn org.luckypray.dexkit.**
 
--keep class com.cloudmusictool.app.** { *; }
+# 框架按类名实例化 ContentProvider，不能改名。
+-keep class com.cloudmusictool.app.StatusProvider {
+    public <init>();
+    public android.os.Bundle call(java.lang.String, java.lang.String, android.os.Bundle);
+}
+
+# DexKit 定位表与 native 加载路径需要保留（反射/DexKit 结构匹配）。
+-keep class com.cloudmusictool.app.dexkit.** { *; }
+
+# libxposed service 通过类名与 provider authority 协作。
 -keep class io.github.libxposed.service.** { *; }

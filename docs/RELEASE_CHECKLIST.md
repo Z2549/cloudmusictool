@@ -1,11 +1,12 @@
-# 发版检查清单（未发布，仅准备）
+# 发版检查清单
 
-> 当前版本 0.1.0，预发布。真机验证通过后再执行「版本号」与「发布」两步。
+> 当前版本 1.1.0（versionCode 3）。1.0.0 已发布；1.1.0 的代码与真机验收记录见
+> [`phase2/1.1.0-VERIFY-A.md`](phase2/1.1.0-VERIFY-A.md)。
 
 ## 1. 真机验证（必须先做）
 
 设备：`25102RKBEC`（Android 17 / arm64 / KernelSU / LSPosed v2.2.1 / 网易云 9.6.08）
-详细记录见 [DEVICE_VERIFICATION.md](DEVICE_VERIFICATION.md)（2026-10-19 第一轮）
+详细记录见 [DEVICE_VERIFICATION.md](DEVICE_VERIFICATION.md)
 
 - [x] 安装 debug APK，LSPosed 启用并勾选网易云（staticScope 自动生效）
 - [x] 状态卡显示「已激活」
@@ -16,7 +17,7 @@
 - [ ] AD-04 首页 Banner、AD-06 播放页广告、AD-07 音频贴片（已注册；视觉无广告，无自然 hit 场景）
 - [x] UI-01 首页 block 多选（开启/关闭双向回归通过，见 DEVICE_VERIFICATION.md）
 - [x] UI-03 底栏（保留清单实测 4→2 生效；选项已按真实 tab 修正）
-- [x] UI-02 顶部频道（**深度修复尝试后降回 blocked**：数据层 `getTabDataList` 已打通并实测命中，但渲染层 tab 容器无法从外部可靠删除，空槽位仍可点击；发布说明须注明「暂不支持」，详见 DEVICE_VERIFICATION.md）
+- [x] UI-02 顶部频道（1.1.0 已实现真实删除：`dr.h#T0` 数据源过滤；真机「只保留推荐 → 1 个 tab、左右滑不进隐藏频道、旋转/深色不崩」）
 - [x] UI-05 启动延迟、UI-07 自动播放（hit 实测）
 - [ ] UI-06 引导气泡、UI-09 挂件（已注册，等自然触发）
 - [x] PV-01~05 逐项开启（二轮已验：无闪退、登录正常、播放正常、PV-03/05 有 hit；已恢复默认关闭）
@@ -25,11 +26,9 @@
 
 ## 2. 版本号
 
-- [ ] 真机验证通过后，`app/build.gradle`：
-  - `versionCode` 从 1 递增
-  - `versionName` 建议 `1.0.0`
-- [ ] 同步 `CHANGELOG.md` 的版本号与日期
-- [ ] 更新 README 的「当前为 0.1.0 预发布版」说明
+- [x] 1.0.0 → 1.1.0：`app/build.gradle` versionCode 2 → 3，versionName 1.0.0 → 1.1.0
+- [x] 同步 `CHANGELOG.md` 的版本号与日期
+- [x] 更新 README 的版本与功能表
 
 ## 3. 构建与签名
 
@@ -57,14 +56,14 @@ gradlew.bat :app:assembleRelease
 - [ ] 截图：状态卡、功能页、首页定制页、关于页
 - [ ] 免责声明与隐私说明
 
-## 5. 仓库与发布（暂不执行）
+## 5. 仓库与发布
 
-- [ ] 初始化 git 仓库并提交（当前目录尚未 `git init`）
+- [x] git 仓库已初始化（当前已有提交）
 - [ ] 源码仓库 tag：`v<versionName>`
-- [ ] LSPosed 官方仓库 tag：`<versionCode>-<versionName>`（例如 `1-1.0.0`）
+- [ ] LSPosed 官方仓库 tag：`<versionCode>-<versionName>`（例如 `3-1.1.0`）
 - [ ] 包名保持 `io.github.yigenhuobah.cloudmusictool`（自动审批）
 - [ ] 上传 release APK 与 mapping.txt
-- [ ] 发布说明包含：目标版本 9.6.08、已知限制、隐私默认关闭
+- [ ] 发布说明包含：目标版本 9.6.08、已知限制、隐私默认关闭、26 个新挂载点、新功能五步验证状态
 
 ## 6. 发布后
 

@@ -17,8 +17,7 @@ public final class StartupDelayHooks {
     public static void install(XposedModule module, ClassLoader cl) {
         Feature f = Feature.STARTUP_DELAY;
         try {
-            Class<?> handlerCls = HookKit.findClass(module, f, cl, "com.netease.cloudmusic.module.startup.StartTimeHandler",
-                    "redPageDelayTime");
+            Class<?> handlerCls = HookKit.findClass(module, f, cl, "com.netease.cloudmusic.module.startup.StartTimeHandler");
             if (handlerCls == null) {
                 return;
             }
@@ -30,10 +29,9 @@ public final class StartupDelayHooks {
 
             // 2. getStartAppRedPageDelayTime(String)J -> 0L
             Method getDelayTime = HookKit.findMethod(module, f, handlerCls, "getStartAppRedPageDelayTime",
-                    long.class, new Class<?>[]{String.class}, "redPageDelayTime");
+                    long.class, new Class<?>[]{String.class});
             if (getDelayTime == null) {
-                getDelayTime = HookKit.findMethodWithAnchors(module, f, handlerCls, "getStartAppRedPageDelayTime",
-                        "redPageDelayTime");
+                getDelayTime = HookKit.findByNameQuiet(handlerCls, "getStartAppRedPageDelayTime");
             }
             HookKit.install(module, f, "StartTimeHandler#getStartAppRedPageDelayTime", getDelayTime, chain -> {
                 try {

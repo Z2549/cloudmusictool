@@ -19,8 +19,7 @@ public final class ApmHooks {
 
         try {
             Class<?> statCls = HookKit.findClass(module, f, cl,
-                    "com.netease.cloudmusic.core.statistic.StatisticImpl",
-                    "StatisticImpl");
+                    "com.netease.cloudmusic.core.statistic.StatisticImpl");
             if (statCls != null) {
                 Method mLogApm = HookKit.findByNameAndArity(statCls, "logApm", 1);
                 if (mLogApm == null) {

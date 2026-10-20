@@ -27,8 +27,7 @@ public final class PlayerAdHooks {
 
         try {
             Class<?> delegate = HookKit.findClass(module, f, cl,
-                    "com.netease.cloudmusic.module.ad.playerjar.PlayerAdJarDelegateImpl",
-                    "PlayerAdJarDelegateImpl", "playerjar");
+                    "com.netease.cloudmusic.module.ad.playerjar.PlayerAdJarDelegateImpl");
             if (delegate != null) {
                 Method k = adCls != null
                         ? HookKit.findMethod(module, f, delegate, "k", adCls, ViewGroup.class, ViewGroup.class)
@@ -48,8 +47,7 @@ public final class PlayerAdHooks {
 
         try {
             Class<?> gift = HookKit.findClass(module, f, cl,
-                    "com.netease.cloudmusic.module.player.vinylfakelayer.musicgift.meta.MusicGiftModel",
-                    "MusicGiftModel", "musicgift");
+                    "com.netease.cloudmusic.module.player.vinylfakelayer.musicgift.meta.MusicGiftModel");
             if (gift != null) {
                 Method isValid = HookKit.findMethod(module, f, gift, "isValid");
                 HookKit.install(module, f, "MusicGiftModel#isValid", isValid,
@@ -61,8 +59,7 @@ public final class PlayerAdHooks {
 
         try {
             Class<?> helper = HookKit.findClass(module, f, cl,
-                    "com.netease.cloudmusic.ui.ad.player.AdPlayerFullScreenHelper",
-                    "AdPlayerFullScreenHelper", "checkNeedExpose");
+                    "com.netease.cloudmusic.ui.ad.player.AdPlayerFullScreenHelper");
             if (helper != null) {
                 Method check = adCls != null
                         ? HookKit.findMethod(module, f, helper, "checkNeedExpose", adCls)

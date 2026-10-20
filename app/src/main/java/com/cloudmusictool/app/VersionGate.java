@@ -70,7 +70,7 @@ public final class VersionGate {
             module.log(Log.WARN, TAG, "unable to resolve target version; 版本未知，按 best-effort 继续");
             return true;
         }
-        if (SUPPORTED_VERSION.equals(versionName)) {
+        if (isSupportedVersion(versionName)) {
             module.log(Log.INFO, TAG, "target version matched: " + versionName);
             return true;
         }
@@ -82,5 +82,14 @@ public final class VersionGate {
         module.log(Log.WARN, TAG, "target version unsupported: " + versionName
                 + " (supported: " + SUPPORTED_VERSION + "), skipping hooks");
         return false;
+    }
+
+    public static boolean isSupportedVersion(String versionName) {
+        return SUPPORTED_VERSION.equals(versionName);
+    }
+
+    /** 纯函数版本门禁：未知版本放行，已知但未适配则看 allowUnsupported。 */
+    public static boolean shouldProceed(String versionName, boolean allowUnsupported) {
+        return versionName == null || isSupportedVersion(versionName) || allowUnsupported;
     }
 }

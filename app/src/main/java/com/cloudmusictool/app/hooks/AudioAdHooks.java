@@ -25,8 +25,7 @@ public final class AudioAdHooks {
 
         try {
             Class<?> manager = HookKit.findClass(module, f, cl,
-                    "com.netease.cloudmusic.module.ad.audioclip.AdAudioClipManager",
-                    "AdAudioClipManager", "AudioClipData");
+                    "com.netease.cloudmusic.module.ad.audioclip.AdAudioClipManager");
             if (manager != null) {
                 Method d = HookKit.findByShape(manager, "d", String.class, int.class, long.class);
                 if (d == null) {
@@ -61,8 +60,7 @@ public final class AudioAdHooks {
 
         try {
             Class<?> podcast = HookKit.findClass(module, f, cl,
-                    "com.netease.cloudmusic.module.ad.podcast.AdPodcastPlayerPageHelper",
-                    "AdPodcastPlayerPageHelper");
+                    "com.netease.cloudmusic.module.ad.podcast.AdPodcastPlayerPageHelper");
             if (podcast != null) {
                 Method h = adCls != null
                         ? HookKit.findMethod(module, f, podcast, "h", adCls)
@@ -76,8 +74,7 @@ public final class AudioAdHooks {
 
         try {
             Class<?> videoHelper = HookKit.findClass(module, f, cl,
-                    "com.netease.cloudmusic.module.ad.podcast.PodcastVideoAdHelperImpl",
-                    "PodcastVideoAdHelperImpl");
+                    "com.netease.cloudmusic.module.ad.podcast.PodcastVideoAdHelperImpl");
             if (videoHelper != null) {
                 Method z = HookKit.findByShape(videoHelper, "z", long.class, long.class);
                 if (z == null) {

@@ -14,20 +14,34 @@ public final class ProcessFilter {
 
     /** 音频播放进程：只装 AD-07。 */
     public static boolean isPlayProcess(String processName) {
-        return processName != null && processName.endsWith(":play");
+        String name = resolve(processName);
+        return name != null && name.endsWith(":play");
     }
 
     public static boolean shouldHook(String processName) {
-        if (processName == null) {
+        String name = resolve(processName);
+        if (name == null) {
             return false;
         }
-        if (processName.endsWith(":patch")
-                || processName.endsWith(":safemode")
-                || processName.endsWith(":heap_analysis")
-                || processName.endsWith(":leakcanary")
-                || processName.endsWith(":play")) {
+        if (name.endsWith(":patch")
+                || name.endsWith(":safemode")
+                || name.endsWith(":heap_analysis")
+                || name.endsWith(":leakcanary")
+                || name.endsWith(":play")) {
             return false;
         }
-        return TARGET_PKG.equals(processName);
+        return TARGET_PKG.equals(name);
+    }
+
+    /** mProcessName 为空时回退到 Application.getProcessName()（API 28+）。 */
+    static String resolve(String processName) {
+        if (processName != null && !processName.isEmpty()) {
+            return processName;
+        }
+        try {
+            return android.app.Application.getProcessName();
+        } catch (Throwable t) {
+            return null;
+        }
     }
 }

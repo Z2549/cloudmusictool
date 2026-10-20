@@ -20,7 +20,7 @@ public final class AdReportHooks {
         // 1. 广告上报任务 execute() -> true（视为上报完成，但不发送网络请求）
         try {
             Class<?> reportTaskCls = HookKit.findClass(module, f, cl, "com.netease.cloudmusic.module.ad.AdCloudReportTask",
-                    "monitorRequest", "ADS2S");
+                    "ADS2S");
             if (reportTaskCls != null) {
                 Method execute = HookKit.findMethod(module, f, reportTaskCls, "execute");
                 HookKit.install(module, f, "AdCloudReportTask#execute", execute,

@@ -18,8 +18,7 @@ public final class LaunchDialogHooks {
     public static void install(XposedModule module, ClassLoader cl) {
         Feature f = Feature.LAUNCH_DIALOG;
         try {
-            Class<?> dialogCls = HookKit.findClass(module, f, cl, "com.netease.cloudmusic.ui.LaunchDialog",
-                    "LaunchDialog");
+            Class<?> dialogCls = HookKit.findClass(module, f, cl, "com.netease.cloudmusic.ui.LaunchDialog");
             if (dialogCls == null) {
                 return;
             }

@@ -20,7 +20,7 @@ public final class FeedAdHooks {
 
         try {
             Class<?> bannerCls = HookKit.findClass(module, f, cl,
-                    "com.netease.cloudmusic.meta.Banner", "isAdBanner", "adLogId", "Banner");
+                    "com.netease.cloudmusic.meta.Banner");
             if (bannerCls != null) {
                 Method isAdBanner = HookKit.findMethod(module, f, bannerCls, "isAdBanner");
                 HookKit.install(module, f, "Banner#isAdBanner", isAdBanner,

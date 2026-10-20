@@ -1,12 +1,62 @@
 # Changelog
 
+## 1.1.0 - 2026-10-20
+
+可信度收尾版（versionCode 3）。真机环境：25102RKBEC / Android 17 / LSPosed 2.2.1 / 网易云音乐 9.6.08。
+
+### 修复与收尾
+
+- **DexKit 兜底真正可用**：release 启用 `jniLibs.useLegacyPackaging`，加载顺序改为
+  「模块 native 目录 → `System.loadLibrary("dexkit")` → 从模块 APK 解压到目标 cacheDir」；
+  修正 9 个高风险混淆类的 anchor（旧 `show ad delayed` 不存在，`hit_noad_abtest` 实际属于 `r60.l`）。
+  真机强制自检通过：`DexKit selftest located=... elapsed=182ms`，AD-01 仍命中。
+- **Hook 健康度可见**：`HookState` 记录 expected/installed/failed/hit；普通变化 2 秒节流、
+  安装结束 `flush()` 一次，工作线程回写 `StatusProvider`。真机状态卡：
+  「本次尝试 104 个挂载点，14 项未命中」（未命中项随服务端下发变化），诊断卡逐项展示。
+- **UI-02 顶部频道真实删除**：在 `dr.h.T0` 数据源上返回过滤后的新列表，适配器 `getItemCount`
+  与 `createFragment` 索引天然重映射；`hc/Tc/Lc/getTabDataList` 同步过滤，`MusicTabLayout.addTab`
+  兜底移除预创建 TabView。真机验证「只保留推荐 → 1 个 tab、左右滑不进隐藏频道、旋转/深色切换不崩」。
+- **UI-04 下架**：删除 `DrawerHooks`、`drawer_items_filter` 读取与配置入口；Feature 保留占位，文案统一「暂不支持」。
+- **隐藏自检**：关于页连点版本号 7 次显示 `dexkit_selftest` 开关，默认关。
+
+### 新增
+
+- `Hooks.java` 已接线 10 个新功能：AD-09 搜索广告、AD-10 广告预加载、UI-10 播放页提示、
+  UI-11 搜索热词、UI-12 播客/AI DJ 引导、UI-13 小组件/推送引导、UI-14 歌词推广、UI-15 云村/直播、
+  PV-06 剪贴板、PV-07 启动任务编排。
+- 新注册 **26 个挂载点**：AD-09 5、AD-10 3、UI-10 5、UI-11 1、UI-12 4、UI-13 5、UI-14 3。
+  默认值保持既定决策：AD/UI 默认开，UI-15/PV-06/PV-07 默认关。
+- 真机已验证命中：AD-10（冷启动 `APreloadRecommendViewTask.init`）、UI-11（`SearchGuide.isValid`）、
+  UI-02（频道 6→1）、PV-06（开启后 `utils.h2#d` 注册，关闭后恢复）。
+- 其余新功能为“已注册、未自然触发”；完整五步验证状态见
+  `docs/phase2/1.1.0-VERIFY-A.md`。
+
+### 工程
+
+- 新增 JUnit 4.13.2 单测：`filterCodeListString`、`filterValue`、`Config.loadSet`、`VersionGate`、`ProcessFilter`。
+- `HookKit` 安装前校验返回类型；`hit` 按挂载点 label 5 秒限流（每个 label 首次必打）；反射样板收口。
+- `ProcessFilter` 在进程名为 null 时回退 `Application.getProcessName()`。
+- R8 keep 收窄到入口/Preference/Provider/DexKit。
+
+### 已知限制
+
+- UI-04 暂不支持；UI-02 的「配置为空回退全量」「多频道保留」已真机补验通过，频道管理页拖拽/删除未回归。
+- AD-02/04/06/07、UI-06、UI-09 仍属「已注册、未自然触发」，未做目视确认。
+- 1.1.0 新增功能中多数未做完整五步验证（开启→触发→hit→截图→关闭恢复）；
+  AD-09/UI-10/UI-12/UI-13/UI-14 未自然触发，UI-15/PV-07 未验证。
+- AD-10 按 AD 组策略默认开启，冷启动已命中 `APreloadRecommendViewTask.init` 与
+  `PodcastRewardAdTask.init`；`AdColdBootEntranceTask.init` 未命中，属已知例外，后续补全五步验证。
+- MIUI 等系统可能拦截目标进程冷启动 `StatusProvider`，此时只写 logcat。
+
+---
+
 ## 1.0.0 - 2026-10-19
 
 正式版。已完成 25102RKBEC 真机验证（Android 17 / LSPosed 2.2.1 / 网易云音乐 9.6.08）。
 
 ### 变更
 
-- **真机验证通过**：82+ 挂载点零失效；AD-01/03/05/08、UI-01/03/05/07、PV-03/05 有命中实测；
+- **真机验证通过**：82+ 挂载点全部 registered（仅注册，不代表 hit）；AD-01/03/05/08、UI-01/03/05/07、PV-03/05 有命中实测；
   UI-01 首页过滤与 AD-03 开关做过开启/关闭双向回归。
 - **UI-01 修复**：推荐页改走 DSL/MixContainer 链路（`MixContainerData.getResources/getBlockCodeOrderList`），
   修复「勾选隐藏卡片后无效」的问题；新增快捷入口/雷达歌单/排行榜三条实测别名映射。

@@ -2,6 +2,7 @@ package com.cloudmusictool.app.hooks;
 
 import com.cloudmusictool.app.Config;
 import com.cloudmusictool.app.Feature;
+import com.cloudmusictool.app.dexkit.DexKitAnchors;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -24,8 +25,7 @@ public final class BottomTabHooks {
         // 1. SettingActivity.T8 / U8 (showFMAtBottomTab / showNoteAtBottomTab)
         try {
             Class<?> settingCls = HookKit.findClass(module, f, cl,
-                    "com.netease.cloudmusic.music.biz.setting.activity.SettingActivity",
-                    "showFMAtBottomTab");
+                    "com.netease.cloudmusic.music.biz.setting.activity.SettingActivity");
             if (settingCls != null) {
                 Method mT8 = HookKit.findMethodQuiet(settingCls, "T8");
                 if (mT8 != null) {
@@ -44,7 +44,7 @@ public final class BottomTabHooks {
 
         // 2. th0.h.h()Ljava/util/List;
         try {
-            Class<?> th0h = HookKit.findClass(module, f, cl, "th0.h", "MainPageTabApiResult");
+            Class<?> th0h = HookKit.findClass(module, f, cl, "th0.h", DexKitAnchors.TH0_H);
             if (th0h != null) {
                 Method mh = HookKit.findMethodQuiet(th0h, "h");
                 if (mh != null) {
@@ -65,7 +65,7 @@ public final class BottomTabHooks {
 
         // 3. rh0.c.c(...)
         try {
-            Class<?> rh0c = HookKit.findClass(module, f, cl, "rh0.c", "MainPageTabApiResult");
+            Class<?> rh0c = HookKit.findClass(module, f, cl, "rh0.c", DexKitAnchors.RH0_C);
             if (rh0c != null) {
                 Method mc = HookKit.findByNameAndArity(rh0c, "c", 3);
                 if (mc == null) {
@@ -99,7 +99,7 @@ public final class BottomTabHooks {
         List<?> list = (List<?>) res;
         List<Object> out = new ArrayList<>();
         for (Object item : list) {
-            if (shouldKeepTab(item, keepSet)) {
+            if (HookKit.shouldKeepTab(item, keepSet)) {
                 out.add(item);
             }
         }
@@ -108,33 +108,5 @@ public final class BottomTabHooks {
         }
         HookKit.hit(module, f, source + " filtered from " + list.size() + " to " + out.size() + " tabs");
         return out;
-    }
-
-    private static boolean shouldKeepTab(Object item, Set<String> keepSet) {
-        if (item == null) {
-            return false;
-        }
-        String[] methodNames = {"getTitle", "getTabName", "getName", "getCode", "getTabTitle", "getTabCode"};
-        for (String name : methodNames) {
-            try {
-                Method m = item.getClass().getMethod(name);
-                m.setAccessible(true);
-                Object val = m.invoke(item);
-                if (val != null && keepSet.contains(val.toString().trim())) {
-                    return true;
-                }
-            } catch (Throwable t1) {
-                try {
-                    Method m = item.getClass().getDeclaredMethod(name);
-                    m.setAccessible(true);
-                    Object val = m.invoke(item);
-                    if (val != null && keepSet.contains(val.toString().trim())) {
-                        return true;
-                    }
-                } catch (Throwable ignored) {
-                }
-            }
-        }
-        return false;
     }
 }

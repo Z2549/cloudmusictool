@@ -19,8 +19,7 @@ public final class ThemeHooks {
 
         try {
             Class<?> routerCls = HookKit.findClass(module, f, cl,
-                    "com.netease.cloudmusic.theme.core.ResourceRouter",
-                    "ResourceRouter", "isNightTheme");
+                    "com.netease.cloudmusic.theme.core.ResourceRouter");
             if (routerCls != null) {
                 Method mNight = HookKit.findMethodQuiet(routerCls, "isNightTheme");
                 if (mNight != null) {

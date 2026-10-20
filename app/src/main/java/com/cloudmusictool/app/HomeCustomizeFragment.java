@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
- * 首页定制与导航精简页面（Phase 0-2 负责 UI 与配置保存，Hook 拦截在 Phase 4 落地）。
+ * 首页定制与导航精简页面。
  */
 public class HomeCustomizeFragment extends PreferenceFragmentCompat {
 
@@ -90,14 +90,6 @@ public class HomeCustomizeFragment extends PreferenceFragmentCompat {
             "心动", "推荐", "音乐", "播客", "听书", "AI写歌"
     };
 
-    // 侧栏抽屉
-    private static final String[] DRAWER_KEYS = {
-            "我的消息", "我的云贝", "装扮中心", "创作者中心", "最近播放", "定时关闭", "商城", "云村有票", "云推歌", "我的客服"
-    };
-    private static final String[] DRAWER_TITLES = {
-            "我的消息", "我的云贝", "装扮中心", "创作者中心", "最近播放", "定时关闭", "商城", "云村有票", "云推歌", "我的客服"
-    };
-
     // 底部导航（与 9.6.08 实测 tab 对齐：getTabTitle/getTabCode）
     private static final String[] BOTTOM_NAV_KEYS = {
             "首页", "搜索", "关注", "我的"
@@ -123,16 +115,7 @@ public class HomeCustomizeFragment extends PreferenceFragmentCompat {
     private void setupPreferences() {
         bindMultiSelect(Config.KEY_HOME_BLOCKS_FILTER, BLOCK_TITLES, BLOCK_KEYS);
         bindMultiSelect(Config.KEY_TOP_CHANNELS_KEEP, CHANNEL_TITLES, CHANNEL_KEYS);
-        bindMultiSelect(Config.KEY_DRAWER_ITEMS_FILTER, DRAWER_TITLES, DRAWER_KEYS);
         bindMultiSelect(Config.KEY_BOTTOM_NAV_KEEP, BOTTOM_NAV_TITLES, BOTTOM_NAV_KEYS);
-
-        // UI-02 渲染层无法完全屏蔽，配置项置灰避免误配
-        MultiSelectPreference topPref = findPreference(Config.KEY_TOP_CHANNELS_KEEP);
-        if (topPref != null) {
-            topPref.setEnabled(false);
-            topPref.setSummary(R.string.home_customize_top_channel_disabled);
-        }
-
 
         Preference hint = findPreference("footer_home_custom_hint");
         if (hint != null) {
@@ -163,7 +146,6 @@ public class HomeCustomizeFragment extends PreferenceFragmentCompat {
         mStore = new ConfigStore(requireContext());
         updatePrefValues(Config.KEY_HOME_BLOCKS_FILTER);
         updatePrefValues(Config.KEY_TOP_CHANNELS_KEEP);
-        updatePrefValues(Config.KEY_DRAWER_ITEMS_FILTER);
         updatePrefValues(Config.KEY_BOTTOM_NAV_KEEP);
     }
 

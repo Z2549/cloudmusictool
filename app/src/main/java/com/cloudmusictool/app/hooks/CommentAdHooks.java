@@ -20,8 +20,7 @@ public final class CommentAdHooks {
 
         try {
             Class<?> adapter = HookKit.findClass(module, f, cl,
-                    "com.netease.cloudmusic.adapter.CommentAdapter",
-                    "CommentListEntry", "commentGeneralBanner", "vipRcmdList");
+                    "com.netease.cloudmusic.adapter.CommentAdapter");
             if (adapter != null) {
                 Class<?> entryCls = null;
                 try {
@@ -53,13 +52,12 @@ public final class CommentAdHooks {
 
         try {
             Class<?> special = HookKit.findClass(module, f, cl,
-                    "com.netease.cloudmusic.meta.virtual.SpecialComment",
-                    "commentGeneralBanner", "vipRcmdList", "liveRcmdList", "concertInfo");
+                    "com.netease.cloudmusic.meta.virtual.SpecialComment");
             if (special != null) {
-                hookNull(module, f, special, "getGeneralBanner");
-                hookNull(module, f, special, "getLiveRcmdList");
-                hookNull(module, f, special, "getVipRcmdList");
-                hookNull(module, f, special, "getConcertInfo");
+                HookKit.hookNull(module, f, special, "getGeneralBanner");
+                HookKit.hookNull(module, f, special, "getLiveRcmdList");
+                HookKit.hookNull(module, f, special, "getVipRcmdList");
+                HookKit.hookNull(module, f, special, "getConcertInfo");
             }
         } catch (Throwable t) {
             HookKit.error(module, f.id + " SpecialComment hook failed", t);
@@ -67,7 +65,7 @@ public final class CommentAdHooks {
 
         try {
             Class<?> comment = HookKit.findClass(module, f, cl,
-                    "com.netease.cloudmusic.meta.Comment", "isTagValid", "bottomTags");
+                    "com.netease.cloudmusic.meta.Comment");
             if (comment != null) {
                 Method isTagValid = HookKit.findMethod(module, f, comment, "isTagValid");
                 HookKit.install(module, f, "Comment#isTagValid", isTagValid,
@@ -89,7 +87,7 @@ public final class CommentAdHooks {
 
         try {
             Class<?> vipAdapter = HookKit.findClass(module, f, cl,
-                    "com.netease.cloudmusic.adapter.CommentVipRcmdAdapter", "CommentVipRcmdAdapter");
+                    "com.netease.cloudmusic.adapter.CommentVipRcmdAdapter");
             if (vipAdapter != null) {
                 Method getItemCount = HookKit.findMethod(module, f, vipAdapter, "getItemCount");
                 HookKit.install(module, f, "CommentVipRcmdAdapter#getItemCount", getItemCount, chain -> {
@@ -106,38 +104,14 @@ public final class CommentAdHooks {
         }
     }
 
-    private static void hookNull(XposedModule module, Feature f, Class<?> cls, String name) {
-        Method m = HookKit.findMethod(module, f, cls, name);
-        HookKit.install(module, f, cls.getSimpleName() + "#" + name, m, chain -> {
-            try {
-                HookKit.hit(module, f, cls.getSimpleName() + "." + name + " -> null");
-                return null;
-            } catch (Throwable t) {
-                return chain.proceed();
-            }
-        });
-    }
-
     private static void clearField(Object target, String name) {
         try {
-            Field field = findField(target.getClass(), name);
+            Field field = HookKit.findField(target.getClass(), name);
             if (field != null) {
                 field.setAccessible(true);
                 field.set(target, null);
             }
         } catch (Throwable ignored) {
         }
-    }
-
-    private static Field findField(Class<?> cls, String name) {
-        Class<?> c = cls;
-        while (c != null && c != Object.class) {
-            try {
-                return c.getDeclaredField(name);
-            } catch (NoSuchFieldException ignored) {
-                c = c.getSuperclass();
-            }
-        }
-        return null;
     }
 }

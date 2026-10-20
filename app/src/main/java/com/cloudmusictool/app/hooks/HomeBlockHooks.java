@@ -46,8 +46,7 @@ public final class HomeBlockHooks {
     private static void hookMixContainer(XposedModule module, ClassLoader cl, Feature f, Config config) {
         try {
             Class<?> dataCls = HookKit.findClass(module, f, cl,
-                    "com.netease.cloudmusic.dsl.container.data.MixContainerData",
-                    "MixContainerData");
+                    "com.netease.cloudmusic.dsl.container.data.MixContainerData");
             if (dataCls == null) {
                 return;
             }
@@ -92,29 +91,24 @@ public final class HomeBlockHooks {
         if (hideSet == null || hideSet.isEmpty() || json == null || json.isEmpty()) {
             return json;
         }
-        try {
-            JSONArray arr = new JSONArray(json);
-            JSONArray out = new JSONArray();
-            int removed = 0;
-            for (int i = 0; i < arr.length(); i++) {
-                String code = arr.optString(i, "");
-                if (code != null && hideSet.contains(code)) {
-                    removed++;
-                    continue;
-                }
-                out.put(code);
-            }
-            if (removed > 0) {
-                HookKit.hit(module, f, "blockCodeOrderList filtered " + removed + "/" + arr.length());
-                return out.toString();
-            }
-            if (sScanLogs.getAndIncrement() < 8) {
-                HookKit.info(module, f.id + " blockCodeOrderList scan len=" + arr.length() + " no-match");
-            }
-        } catch (Throwable ignored) {
-            // 非 JSON 时保持原样
+        int[] removed = new int[]{0};
+        String out = JsonFilter.filterCodeListString(json, hideSet, removed);
+        if (removed[0] > 0) {
+            HookKit.hit(module, f, "blockCodeOrderList filtered " + removed[0] + "/" + countJsonArray(json));
+            return out;
+        }
+        if (sScanLogs.getAndIncrement() < 8) {
+            HookKit.info(module, f.id + " blockCodeOrderList scan len=" + countJsonArray(json) + " no-match");
         }
         return json;
+    }
+
+    private static int countJsonArray(String json) {
+        try {
+            return new JSONArray(json).length();
+        } catch (Throwable t) {
+            return 0;
+        }
     }
 
     /** resources 列表的元素可能是 JSONObject 或带 getBlockCode/getCode 的对象。 */
@@ -177,17 +171,19 @@ public final class HomeBlockHooks {
     }
 
     private static void collectModuleKeys(Object item, java.util.Set<String> out) {
-        Object model = invokeNoArg(item, "getDslWrapperModel");
+        Object model = HookKit.invokeNoArg(item, "getDslWrapperModel");
         if (model == null) {
             return;
         }
-        String text = String.valueOf(invokeNoArg(model, "getOriginData"));
-        java.util.regex.Matcher mk = java.util.regex.Pattern
-                .compile("home_[a-z0-9_]{6,}").matcher(text);
+        String text = String.valueOf(HookKit.invokeNoArg(model, "getOriginData"));
+        java.util.regex.Matcher mk = MODULE_KEY.matcher(text);
         if (mk.find()) {
             out.add(mk.group());
         }
     }
+
+    private static final java.util.regex.Pattern MODULE_KEY =
+            java.util.regex.Pattern.compile("home_[a-z0-9_]{6,}");
 
     /**
      * DslBlock -> getDslWrapperModel() 的 originData 里能找到 PAGE_* 代码
@@ -205,22 +201,22 @@ public final class HomeBlockHooks {
             return out;
         }
 
-        Object model = invokeNoArg(item, "getDslWrapperModel");
+        Object model = HookKit.invokeNoArg(item, "getDslWrapperModel");
         if (model != null) {
-            Object origin = invokeNoArg(model, "getOriginData");
+            Object origin = HookKit.invokeNoArg(model, "getOriginData");
             addIfPresent(out, jsonString(origin, "blockCode"));
             collectPageCodes(out, origin, 8);
-            Object ext = invokeNoArg(model, "getExtData");
+            Object ext = HookKit.invokeNoArg(model, "getExtData");
             addIfPresent(out, jsonString(ext, "blockCode"));
             collectPageCodes(out, ext, 8);
-            Object dsl = invokeNoArg(model, "getDslContent");
+            Object dsl = HookKit.invokeNoArg(model, "getDslContent");
             collectPageCodes(out, dsl, 8);
         }
 
         if (out.isEmpty()) {
             String[] getters = {"getBlockCode", "getCode", "getBlockCodeStr"};
             for (String name : getters) {
-                String v = asString(invokeNoArg(item, name));
+                String v = asString(HookKit.invokeNoArg(item, name));
                 if (v != null && !v.isEmpty()) {
                     addIfPresent(out, v);
                     break;
@@ -247,19 +243,6 @@ public final class HomeBlockHooks {
         java.util.regex.Matcher m = PAGE_CODE.matcher(text);
         while (m.find() && out.size() < max) {
             out.add(m.group());
-        }
-    }
-
-    private static Object invokeNoArg(Object target, String method) {
-        if (target == null) {
-            return null;
-        }
-        try {
-            Method m = target.getClass().getMethod(method);
-            m.setAccessible(true);
-            return m.invoke(target);
-        } catch (Throwable ignored) {
-            return null;
         }
     }
 
@@ -292,14 +275,6 @@ public final class HomeBlockHooks {
     private static final java.util.regex.Pattern PAGE_CODE =
             java.util.regex.Pattern.compile("PAGE_[A-Z0-9_]{3,}");
 
-    private static String findPageCode(String text) {
-        if (text == null || text.length() < 8) {
-            return null;
-        }
-        java.util.regex.Matcher m = PAGE_CODE.matcher(text);
-        return m.find() ? m.group() : null;
-    }
-
     // ------------------------------------------------------------------
     // 2. 经典发现页
     // ------------------------------------------------------------------
@@ -307,8 +282,7 @@ public final class HomeBlockHooks {
     private static void hookDiscoveryBlockList(XposedModule module, ClassLoader cl, Feature f, Config config) {
         try {
             Class<?> blockDataCls = HookKit.findClass(module, f, cl,
-                    "com.netease.cloudmusic.discovery.data.meta.DiscoveryBlockData",
-                    "blockCode", "DiscoveryBlockData");
+                    "com.netease.cloudmusic.discovery.data.meta.DiscoveryBlockData");
             if (blockDataCls == null) {
                 return;
             }
@@ -465,7 +439,7 @@ public final class HomeBlockHooks {
         try {
             int[] removed = new int[]{0};
             Object root = trimmed.startsWith("{") ? new JSONObject(trimmed) : new JSONArray(trimmed);
-            Object filtered = filterValue(root, hideSet, removed, 0);
+            Object filtered = JsonFilter.filterValue(root, hideSet, removed, 0);
             if (removed[0] > 0) {
                 HookKit.hit(module, f, "cache filtered " + removed[0] + " blocks ("
                         + shortName(store) + "/" + shortName(key) + ")");
@@ -478,85 +452,6 @@ public final class HomeBlockHooks {
         } catch (Throwable ignored) {
         }
         return str;
-    }
-
-    private static Object filterValue(Object node, Set<String> hideSet, int[] removed, int depth) {
-        if (depth > 6) {
-            return node;
-        }
-        if (node instanceof JSONObject) {
-            JSONObject obj = (JSONObject) node;
-            List<String> keys = new ArrayList<>();
-            Iterator<String> it = obj.keys();
-            while (it.hasNext()) {
-                keys.add(it.next());
-            }
-            for (String key : keys) {
-                Object val = obj.opt(key);
-                if (val instanceof JSONObject || val instanceof JSONArray) {
-                    try {
-                        obj.put(key, filterValue(val, hideSet, removed, depth + 1));
-                    } catch (Throwable ignored) {
-                    }
-                } else if (val instanceof String) {
-                    String s = (String) val;
-                    String t = s.trim();
-                    if (t.startsWith("{") || t.startsWith("[")) {
-                        int before = removed[0];
-                        Object nested = filterNestedString(s, hideSet, removed, depth + 1);
-                        if (removed[0] > before) {
-                            try {
-                                obj.put(key, nested);
-                            } catch (Throwable ignored) {
-                            }
-                        }
-                    }
-                }
-            }
-            return obj;
-        }
-        if (node instanceof JSONArray) {
-            JSONArray arr = (JSONArray) node;
-            JSONArray out = new JSONArray();
-            for (int i = 0; i < arr.length(); i++) {
-                Object item = arr.opt(i);
-                if (item instanceof JSONObject) {
-                    String code = ((JSONObject) item).optString("blockCode", null);
-                    if (code != null && hideSet.contains(code)) {
-                        removed[0]++;
-                        continue;
-                    }
-                    out.put(filterValue(item, hideSet, removed, depth + 1));
-                } else if (item instanceof JSONArray) {
-                    out.put(filterValue(item, hideSet, removed, depth + 1));
-                } else if (item instanceof String) {
-                    String s = (String) item;
-                    String t = s.trim();
-                    int before = removed[0];
-                    if (t.startsWith("{") || t.startsWith("[")) {
-                        Object nested = filterNestedString(s, hideSet, removed, depth + 1);
-                        out.put(removed[0] > before ? nested : item);
-                    } else {
-                        out.put(item);
-                    }
-                } else {
-                    out.put(item);
-                }
-            }
-            return out;
-        }
-        return node;
-    }
-
-    private static Object filterNestedString(String s, Set<String> hideSet, int[] removed, int depth) {
-        try {
-            String t = s.trim();
-            Object root = t.startsWith("{") ? new JSONObject(t) : new JSONArray(t);
-            Object filtered = filterValue(root, hideSet, removed, depth);
-            return filtered.toString();
-        } catch (Throwable ignored) {
-            return s;
-        }
     }
 
     private static boolean containsIgnoreCase(String s, String needle) {

@@ -20,8 +20,7 @@ public final class LogTaskHooks {
         // 1. NeedLogToFileTask.init()V -> skipVoid
         try {
             Class<?> needLogCls = HookKit.findClass(module, f, cl,
-                    "com.netease.cloudmusic.process.task.app.create.NeedLogToFileTask",
-                    "NeedLogToFileTask");
+                    "com.netease.cloudmusic.process.task.app.create.NeedLogToFileTask");
             if (needLogCls != null) {
                 Method mInit = HookKit.findMethodQuiet(needLogCls, "init");
                 if (mInit != null) {
@@ -36,8 +35,7 @@ public final class LogTaskHooks {
         // 2. NBLogTask.init()V -> skipVoid
         try {
             Class<?> nbLogCls = HookKit.findClass(module, f, cl,
-                    "com.netease.cloudmusic.process.task.app.create.NBLogTask",
-                    "NBLogTask");
+                    "com.netease.cloudmusic.process.task.app.create.NBLogTask");
             if (nbLogCls != null) {
                 Method mInit = HookKit.findMethodQuiet(nbLogCls, "init");
                 if (mInit != null) {

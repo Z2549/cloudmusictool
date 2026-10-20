@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.view.ViewParent;
 
 import com.cloudmusictool.app.Feature;
+import com.cloudmusictool.app.dexkit.DexKitAnchors;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -58,7 +59,7 @@ public final class SplashAdHooks {
 
     private static void hookLoadingAdManager(XposedModule module, ClassLoader cl, Feature f) {
         Class<?> managerCls = HookKit.findClass(module, f, cl, "com.netease.cloudmusic.module.ad.LoadingAdManager",
-                "show ad delayed", "LoadingAdManager");
+                DexKitAnchors.LOADING_AD_MANAGER);
         Class<?> adInfoCls = HookKit.findClass(module, f, cl, "com.netease.cloudmusic.module.ad.meta.AdInfo");
         if (managerCls == null) {
             return;
@@ -105,8 +106,7 @@ public final class SplashAdHooks {
     }
 
     private static void hookLoadingAdActivity(XposedModule module, ClassLoader cl, Feature f) {
-        Class<?> actCls = HookKit.findClass(module, f, cl, "com.netease.cloudmusic.activity.LoadingAdActivity",
-                "LoadingAdActivity");
+        Class<?> actCls = HookKit.findClass(module, f, cl, "com.netease.cloudmusic.activity.LoadingAdActivity");
         if (actCls == null) {
             return;
         }
@@ -127,8 +127,7 @@ public final class SplashAdHooks {
     }
 
     private static void hookLoadingAdFragment(XposedModule module, ClassLoader cl, Feature f) {
-        Class<?> fragCls = HookKit.findClass(module, f, cl, "com.netease.cloudmusic.fragment.LoadingAdFragment",
-                "LoadingAdFragment");
+        Class<?> fragCls = HookKit.findClass(module, f, cl, "com.netease.cloudmusic.fragment.LoadingAdFragment");
         if (fragCls == null) {
             return;
         }
@@ -159,8 +158,7 @@ public final class SplashAdHooks {
     }
 
     private static void hookLoadingAdShakeHelper(XposedModule module, ClassLoader cl, Feature f) {
-        Class<?> shakeCls = HookKit.findClass(module, f, cl, "com.netease.cloudmusic.module.ad.boot.LoadingAdShakeHelper",
-                "LoadingAdShakeHelper");
+        Class<?> shakeCls = HookKit.findClass(module, f, cl, "com.netease.cloudmusic.module.ad.boot.LoadingAdShakeHelper");
         if (shakeCls == null) {
             return;
         }
@@ -170,12 +168,12 @@ public final class SplashAdHooks {
     }
 
     private static void hookNoAdAbTest(XposedModule module, ClassLoader cl, Feature f) {
-        Class<?> w0Cls = HookKit.findClass(module, f, cl, "q60.w0", "hit_noad_abtest");
+        Class<?> w0Cls = HookKit.findClass(module, f, cl, "q60.w0", DexKitAnchors.Q60_W0);
         if (w0Cls == null) {
             return;
         }
-        // 注意极性：q60/w0.g() 返回 false 才是命中免广分支（hit_noad_abtest）
-        Method g = HookKit.findMethodWithAnchors(module, f, w0Cls, "g", "hit_noad_abtest");
+        // 注意极性：q60/w0.g() 返回 false 才是命中免广分支
+        Method g = HookKit.findMethodWithAnchors(module, f, w0Cls, "g", DexKitAnchors.Q60_W0);
         HookKit.install(module, f, "q60.w0#g", g,
                 HookKit.constBool(module, f, "q60.w0.g -> false (hit_noad_abtest)", false));
     }

@@ -26,9 +26,14 @@ public final class Config {
 
     public static final String KEY_HOME_BLOCKS_FILTER = "home_blocks_filter";
     public static final String KEY_TOP_CHANNELS_KEEP = "top_channels_keep";
-    public static final String KEY_DRAWER_ITEMS_FILTER = "drawer_items_filter";
     public static final String KEY_BOTTOM_NAV_KEEP = "bottom_nav_keep";
     public static final String KEY_STARTUP_TASK_BLOCKLIST = "startup_task_blocklist";
+
+    /** 隐藏自检开关：设置页“关于”连点 7 次后可见。开启后 AD-01 强制走 DexKit。 */
+    public static final String KEY_DEXKIT_SELFTEST = "dexkit_selftest";
+    public static final boolean DEFAULT_DEXKIT_SELFTEST = false;
+
+    private static volatile boolean sDexKitSelfTest = DEFAULT_DEXKIT_SELFTEST;
 
     private static final String TAG = "CloudMusicTool";
 
@@ -44,6 +49,7 @@ public final class Config {
 
     public static Config load(XposedModule module) {
         Config config = new Config();
+        sDexKitSelfTest = DEFAULT_DEXKIT_SELFTEST;
         boolean remote = (module.getFrameworkProperties() & XposedInterface.PROP_CAP_REMOTE) != 0;
         if (!remote) {
             module.log(Log.WARN, TAG, "no PROP_CAP_REMOTE: use built-in defaults");
@@ -56,9 +62,9 @@ public final class Config {
                     config.mEnabled.put(f, sp.getBoolean(f.key, f.defaultEnabled));
                 }
                 config.mAllowUnsupported = sp.getBoolean(KEY_ALLOW_UNSUPPORTED, DEFAULT_ALLOW_UNSUPPORTED);
+                sDexKitSelfTest = sp.getBoolean(KEY_DEXKIT_SELFTEST, DEFAULT_DEXKIT_SELFTEST);
                 loadSet(sp, KEY_HOME_BLOCKS_FILTER, config.mCustomSets);
                 loadSet(sp, KEY_TOP_CHANNELS_KEEP, config.mCustomSets);
-                loadSet(sp, KEY_DRAWER_ITEMS_FILTER, config.mCustomSets);
                 loadSet(sp, KEY_BOTTOM_NAV_KEEP, config.mCustomSets);
                 loadSet(sp, KEY_STARTUP_TASK_BLOCKLIST, config.mCustomSets);
             }
@@ -68,7 +74,7 @@ public final class Config {
         return config;
     }
 
-    private static void loadSet(SharedPreferences sp, String key, Map<String, Set<String>> out) {
+    static void loadSet(SharedPreferences sp, String key, Map<String, Set<String>> out) {
         try {
             Set<String> set = sp.getStringSet(key, null);
             if (set != null) {
@@ -113,5 +119,10 @@ public final class Config {
     public Set<String> getFilterSet(String key) {
         Set<String> s = mCustomSets.get(key);
         return s != null ? s : Collections.emptySet();
+    }
+
+    /** 目标进程内共享的隐藏自检开关（由 Config.load 写入）。 */
+    public static boolean dexKitSelfTest() {
+        return sDexKitSelfTest;
     }
 }

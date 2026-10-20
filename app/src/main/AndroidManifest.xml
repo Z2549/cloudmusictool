@@ -20,6 +20,13 @@
             android:exported="true"
             android:grantUriPermissions="false" />
 
+        <!-- 目标进程通过 call("report") 回写 Hook 健康度；provider 内校验调用方 UID。 -->
+        <provider
+            android:name=".StatusProvider"
+            android:authorities="${applicationId}.status"
+            android:exported="true"
+            android:grantUriPermissions="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">

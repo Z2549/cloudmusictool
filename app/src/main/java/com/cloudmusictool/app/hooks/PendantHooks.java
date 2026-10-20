@@ -1,6 +1,7 @@
 package com.cloudmusictool.app.hooks;
 
 import com.cloudmusictool.app.Feature;
+import com.cloudmusictool.app.dexkit.DexKitAnchors;
 
 import java.lang.reflect.Method;
 
@@ -19,7 +20,7 @@ public final class PendantHooks {
         try {
             Class<?> jnCls = HookKit.findClass(module, f, cl,
                     "com.netease.cloudmusic.utils.jn",
-                    "jn", "L");
+                    DexKitAnchors.JN);
             if (jnCls != null) {
                 Method mL = HookKit.findMethodQuiet(jnCls, "L");
                 if (mL == null) {

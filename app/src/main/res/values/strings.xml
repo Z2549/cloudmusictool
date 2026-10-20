@@ -19,6 +19,12 @@
     <string name="status_detail_inactive">请在 LSPosed 中启用本模块并勾选网易云音乐</string>
     <string name="status_detail_connecting">绑定成功后自动刷新</string>
     <string name="status_detail_unsupported">当前版本 %1$s 未适配（官方适配：9.6.08）</string>
+    <string name="status_detail_injected">本次尝试 %1$d 个挂载点，%2$d 项未命中</string>
+    <string name="status_diagnostics_title">诊断</string>
+    <string name="status_diagnostics_empty">暂无目标进程回写。启动网易云音乐后自动刷新。</string>
+    <string name="status_diagnostics_none">未启用任何功能</string>
+    <string name="dexkit_selftest_title">DexKit 自检（调试）</string>
+    <string name="dexkit_selftest_summary">开启后 AD-01 的 LoadingAdManager 忽略硬编码类名，强制走 DexKit 定位；日志输出 selftest located/elapsed</string>
 
     <!-- 底栏 -->
     <string name="nav_features">功能</string>
@@ -31,12 +37,12 @@
     <string name="group_privacy">隐私与上报</string>
 
     <!-- 功能页页脚 -->
-    <string name="footer_limits">说明：Phase 0-5 功能已全部实装。隐私与监控类功能默认关闭，可按需开启。</string>
+    <string name="footer_limits">说明：广告与界面类功能默认开启，隐私与监控类功能默认关闭。各功能均可在对应分类中单独关闭。</string>
     <string name="footer_hint">修改后自动同步至目标进程。若部分项未立即生效，请重启网易云音乐。</string>
 
     <!-- 功能清单 -->
     <string name="f_ad_01_title">开屏广告跳过</string>
-    <string name="f_ad_01_summary">拦截开屏广告展示、清空广告缓存并秒退广告落地页</string>
+    <string name="f_ad_01_summary">拦截开屏广告展示、使广告数据源返回空并秒退广告落地页</string>
     <string name="f_ad_02_title">运营弹窗屏蔽</string>
     <string name="f_ad_02_summary">屏蔽应用启动时的各类运营推广及营销弹窗（保留登录弹窗）</string>
     <string name="f_ad_03_title">更新弹窗屏蔽</string>
@@ -51,47 +57,64 @@
     <string name="f_ad_07_summary">拦截音频起播贴片与播客内插广告</string>
     <string name="f_ad_08_title">广告上报与外跳拦截</string>
     <string name="f_ad_08_summary">阻断广告统计上报，拦截静默拉起外部电商或推广应用</string>
+    <string name="f_ad_09_title">搜索广告净化</string>
+    <string name="f_ad_09_summary">清空搜索起始页广告位，并关闭搜索结果中的大图/中图广告</string>
+    <string name="f_ad_10_title">广告预加载裁剪</string>
+    <string name="f_ad_10_summary">跳过冷启动广告入口与播客激励广告预加载任务</string>
 
     <string name="f_ui_05_title">跳过启动延迟</string>
     <string name="f_ui_05_summary">绕过 StartTimeHandler 红屏停留计时，立即执行启动任务</string>
     <string name="f_ui_01_title">首页模块净化</string>
     <string name="f_ui_01_summary">自定义隐藏发现页各推荐板块</string>
     <string name="f_ui_02_title">顶部频道管理</string>
-    <string name="f_ui_02_summary">解锁官方顶部频道删除与排序限制</string>
+    <string name="f_ui_02_summary">按保留清单真实删除顶部频道 tab 与对应页面，至少保留 1 个频道</string>
     <string name="f_ui_03_title">底部导航精简</string>
     <string name="f_ui_03_summary">自定义精简底部导航栏 Tab</string>
     <string name="f_ui_04_title">侧栏抽屉精简</string>
-    <string name="f_ui_04_summary">自定义隐藏侧栏抽屉中的推广与冗余项目（默认关闭）</string>
+    <string name="f_ui_04_summary">暂不支持：9.6.08 未找到可靠的抽屉数据挂载点</string>
     <string name="f_ui_06_title">引导与气泡屏蔽</string>
-    <string name="f_ui_06_summary">屏蔽各类引导气泡、评分弹窗、青少年弹窗及权限引导</string>
+    <string name="f_ui_06_summary">屏蔽各类引导气泡、评分弹窗与青少年弹窗</string>
     <string name="f_ui_07_title">禁止自动播放</string>
     <string name="f_ui_07_summary">禁止冷启动或切歌时自动播放音频</string>
     <string name="f_ui_08_title">强制深色模式（实验性）</string>
     <string name="f_ui_08_summary">强制开启夜间深色主题外观（实验性，默认关闭）</string>
     <string name="f_ui_09_title">关闭头像挂件</string>
     <string name="f_ui_09_summary">屏蔽个人主页与评论区头像挂件与装饰</string>
+    <string name="f_ui_10_title">播放页提示治理</string>
+    <string name="f_ui_10_summary">关闭播放页评论气泡、推荐歌曲提示、卡顿/网络错误弹窗与激励广告浮层</string>
+    <string name="f_ui_11_title">搜索热词轮播</string>
+    <string name="f_ui_11_summary">关闭搜索框内的运营热词轮播引导</string>
+    <string name="f_ui_12_title">播客与 AI DJ 引导</string>
+    <string name="f_ui_12_summary">关闭 FM 自动播放、听书权益与 AI DJ 切换引导</string>
+    <string name="f_ui_13_title">小组件与推送引导</string>
+    <string name="f_ui_13_summary">关闭添加小组件、推送引导弹窗与底部弹层</string>
+    <string name="f_ui_14_title">歌词页推广</string>
+    <string name="f_ui_14_summary">关闭歌词页底部推广 Hint、选项气泡与歌词视频弹窗</string>
+    <string name="f_ui_15_title">云村与直播推广</string>
+    <string name="f_ui_15_summary">关闭直播间推广位与云村发布/搜索引导气泡（默认关闭）</string>
 
     <string name="f_pv_01_title">OAID 与设备追踪拦截</string>
-    <string name="f_pv_01_summary">阻断 OAID 读取与设备指纹上报</string>
+    <string name="f_pv_01_summary">阻断 OAID 上传链路与相关启动任务</string>
     <string name="f_pv_02_title">日志写盘任务屏蔽</string>
     <string name="f_pv_02_summary">屏蔽 NeedLogToFileTask 与 NBLogTask 日志落盘任务</string>
     <string name="f_pv_03_title">启动任务黑名单</string>
     <string name="f_pv_03_summary">拦截启动黑名单中的非必要任务与追踪组件</string>
     <string name="f_pv_04_title">APM 上报抑制</string>
     <string name="f_pv_04_summary">抑制 APM 性能数据上报与后台强制上传</string>
-    <string name="f_pv_05_title">统计数据上报观测</string>
-    <string name="f_pv_05_summary">仅观测并记录统计上报日志，不拦截业务调用</string>
+    <string name="f_pv_05_title">统计数据上报抑制</string>
+    <string name="f_pv_05_summary">记录统计上报调用，并关闭 LogMonitorConfigManager 的监控开关</string>
+    <string name="f_pv_06_title">剪贴板读取拦截</string>
+    <string name="f_pv_06_summary">阻断全局剪贴板读取入口，避免启动时识别口令/深链（默认关闭）</string>
+    <string name="f_pv_07_title">启动任务编排</string>
+    <string name="f_pv_07_summary">对白名单启动任务调整优先级、线程与降级编排（实验性，默认关闭）</string>
 
     <!-- 首页定制页 -->
     <string name="home_customize_title">首页与导航定制</string>
-    <string name="home_customize_top_channel_disabled">当前版本数据链路未接通，暂不生效</string>
-    <string name="home_customize_hint">本页配置已持久化至远程配置；底层的 Hook 过滤已启用，修改后重启网易云音乐生效。</string>
+    <string name="home_customize_hint">本页配置已持久化至远程配置。勾选后重启网易云音乐生效；未勾选任何项时对应功能保持全量显示。</string>
     <string name="home_blocks_title">发现页推荐卡片隐藏</string>
     <string name="home_blocks_summary">勾选需要在首页过滤的卡片类型</string>
     <string name="home_channels_title">顶部频道保留</string>
-    <string name="home_channels_summary">保留需要的顶部频道项</string>
-    <string name="home_drawer_title">侧栏抽屉精简</string>
-    <string name="home_drawer_summary">勾选在抽屉菜单中隐藏的推广项目</string>
+    <string name="home_channels_summary">保留需要的顶部频道；留空显示全部</string>
     <string name="home_bottom_nav_title">底部导航保留</string>
     <string name="home_bottom_nav_summary">保留需要的底部导航 Tab</string>
 

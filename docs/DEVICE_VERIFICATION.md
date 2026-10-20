@@ -1,4 +1,58 @@
-# 真机验证记录（0.1.0 debug）
+# 真机验证记录
+
+> 1.1.0 的详细验收见 [`phase2/1.1.0-VERIFY-A.md`](phase2/1.1.0-VERIFY-A.md)。
+> 下文 0.1.0 / 1.0.0 记录保留为历史，其中「零失效」只代表 registered，不代表 hit。
+
+---
+
+# 1.1.0 验证矩阵（2026-10-20）
+
+设备：`25102RKBEC`（Android 17 / LSPosed 2.2.1 / 网易云 9.6.08）
+APK：`cloudmusictool-1.1.0.apk`（versionCode 3，release 覆盖安装）
+
+| 功能 | registered | hit | 未验证 / 说明 |
+|---|---|---|---|
+| AD-01 开屏 | 7/7 | 是（E/G/o、q60.w0.g、DexKit 自检） | — |
+| AD-02 运营弹窗 | 6/6 | 否 | 服务端未下发 |
+| AD-03 更新弹窗 | 6/6 | 是（UpdateInfo） | 下载入口未触发 |
+| AD-04 首页 Banner | 1/1 | 随服务端下发（本轮否） | Banner 未下发时无 hit |
+| AD-05 评论广告 | 8/8 | 是（Comment 标签） | 4 个 getter 未自然命中 |
+| AD-06 播放页广告 | 4/4 | 否 | 服务端未下发贴片 |
+| AD-07 音频/播客 | 4/4 | 否 | 未触发播客广告 |
+| AD-08 上报/外跳 | 4/4 | 是（Deeplink task） | 外跳拦截未触发 |
+| AD-09 搜索广告 | 5/5 | 否 | 已接线，未自然触发 |
+| AD-10 广告预加载 | 3/3 | 是（冷启动 `APreloadRecommendViewTask.init`） | 关闭恢复未做 |
+| UI-01 首页模块 | 6/6 | 是（历史版本） | 1.1.0 未逐项回归 |
+| UI-02 顶部频道 | 12/12 | 是（Tc/Lc/T0/hc/getTabDataList 均 filtered 6→1） | 真机：1 个 tab、滑动/旋转/深色通过 |
+| UI-03 底栏 | 4/4 | 是（历史版本） | 1.1.0 未逐项回归 |
+| UI-04 抽屉 | — | — | 暂不支持，配置入口已移除 |
+| UI-05 启动延迟 | 3/3 | 是 | — |
+| UI-06 引导气泡 | 6/6 | 否 | 服务端未下发 |
+| UI-07 自动播放 | 6/6 | 是（历史版本） | 1.1.0 未逐项回归 |
+| UI-08 深色 | 默认关 | — | 未做完整回归 |
+| UI-09 挂件 | 1/1 | 否 | 未自然触发 |
+| UI-10 播放页提示 | 5/5 | 否 | 已接线，未自然触发 |
+| UI-11 搜索热词 | 1/1 | 是（`SearchGuide.isValid`） | — |
+| UI-12 播客/AI DJ | 4/4 | 否 | 已接线，未自然触发 |
+| UI-13 小组件/推送 | 5/5 | 否 | 已接线，未自然触发；onCreateView 返回 null 方案 |
+| UI-14 歌词推广 | 3/3 | 否 | 已接线，未自然触发 |
+| UI-15 云村/直播 | 默认关 | 否 | 未开启验证 |
+| PV-01~05 | 5 项 | PV-03/05 是 | 其余仅开启无崩溃 |
+| PV-06 剪贴板 | 默认关 | 否 | 开启后 `utils.h2#d` 注册、关闭后恢复；hit 未自然触发 |
+| PV-07 启动编排 | 默认关 | 否 | 未开启验证 |
+
+1.1.0 真机新增结论：
+
+- DexKit 强制自检：`DexKit selftest located=com.netease.cloudmusic.module.ad.LoadingAdManager elapsed=182ms`，
+  AD-01 仍命中；关闭自检后无 selftest 日志，AD-01 走硬编码路径命中。
+- Hook 健康度：状态卡 `本次尝试 104 个挂载点，14 项未命中`；诊断卡逐项可见。
+  （未命中项随服务端下发变化；接线初测为 108/108，本轮把 UI-02 的 5 个 `addTab` 重载收敛为 1 个底层重载，
+  UI-02 由 16 降为 12。）
+- StatusProvider 在模块 App 进程存活时回写成功；MIUI 冷启动会 `security reject start`。
+
+---
+
+# 0.1.0 首轮验证（历史）
 
 设备：`25102RKBEC`（Android 17 / SDK 37 / arm64-v8a / KernelSU / LSPosed 2.2.1）
 目标：网易云音乐 `com.netease.cloudmusic` 9.6.08
@@ -119,7 +173,7 @@ logcat tag `CloudMusicTool` / `LSPosedFramework` 全量 `registered` 记录：
 
 ### AD-02/06/07、UI-06 自然触发（未出现场景）
 
-服务端未下发运营弹窗/贴片/引导气泡，无法目视确认；保持「已注册、零失效」状态。
+服务端未下发运营弹窗/贴片/引导气泡，无法目视确认；保持「已注册（仅 registered）」状态。
 
 ## 2. 首页定制映射覆盖
 

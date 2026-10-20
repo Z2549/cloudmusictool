@@ -31,8 +31,7 @@ public final class StatisticHooks {
         // 1. StatisticImpl.log / logJSON
         try {
             Class<?> statCls = HookKit.findClass(module, f, cl,
-                    "com.netease.cloudmusic.core.statistic.StatisticImpl",
-                    "StatisticImpl");
+                    "com.netease.cloudmusic.core.statistic.StatisticImpl");
             if (statCls != null) {
                 Method mLog = HookKit.findMethodQuiet(statCls, "log", String.class, Object[].class);
                 if (mLog == null) {
@@ -87,8 +86,7 @@ public final class StatisticHooks {
         // 2. LogMonitorConfigManager: b, c, d, e -> false
         try {
             Class<?> monitorCls = HookKit.findClass(module, f, cl,
-                    "com.netease.cloudmusic.statistic.monitor.LogMonitorConfigManager",
-                    "LogMonitorConfigManager");
+                    "com.netease.cloudmusic.statistic.monitor.LogMonitorConfigManager");
             if (monitorCls != null) {
                 String[] methods = {"b", "c", "d", "e"};
                 for (String mName : methods) {

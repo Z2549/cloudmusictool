@@ -6,6 +6,8 @@ import android.os.Bundle;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 
+import org.json.JSONObject;
+
 import java.util.List;
 
 import io.github.libxposed.service.HookedTarget;
@@ -44,7 +46,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             }
             p.setTitle(f.titleRes);
             if (f.blocked()) {
-                p.setSummary(getString(f.summaryRes) + " (" + f.blockedReason + ")");
+                p.setSummary(f.summaryRes);
                 p.setEnabled(false);
             } else {
                 p.setSummary(f.summaryRes);
@@ -113,13 +115,17 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                     status.setSummary(getString(R.string.status_detail_unsupported, targetVersion));
                 } else if (injected) {
                     status.setTitle(R.string.status_active);
-                    status.setSummary(getString(R.string.status_detail_active, api));
+                    String base = getString(R.string.status_detail_active, api);
+                    String injection = injectionSummary();
+                    status.setSummary(injection == null ? base : base + "\n" + injection);
                 } else {
                     status.setTitle(R.string.status_connected);
                     status.setSummary(R.string.status_detail_not_running);
                 }
             }
         }
+
+        updateDiagnostics();
 
         for (Feature f : Feature.values()) {
             Preference p = findPreference(f.key);
@@ -151,5 +157,72 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         } catch (Throwable ignored) {
         }
         return false;
+    }
+
+    /** 状态卡上的“本次注入 N/M 挂载点，K 项未命中”。 */
+    private String injectionSummary() {
+        JSONObject root = readStatus();
+        if (root == null) {
+            return null;
+        }
+        int enabled = root.optInt("enabledFeatures", 0);
+        if (enabled == 0) {
+            return null;
+        }
+        return getString(R.string.status_detail_injected,
+                root.optInt("expected", 0),
+                root.optInt("noHitFeatures", 0));
+    }
+
+    /** 诊断卡：每项 installed/expected/hit/最近失败原因。 */
+    private void updateDiagnostics() {
+        Preference diag = findPreference("status_diagnostics");
+        if (diag == null) {
+            return;
+        }
+        JSONObject root = readStatus();
+        if (root == null) {
+            diag.setSummary(R.string.status_diagnostics_empty);
+            return;
+        }
+        int enabled = root.optInt("enabledFeatures", 0);
+        StringBuilder sb = new StringBuilder();
+        if (enabled == 0) {
+            sb.append(getString(R.string.status_diagnostics_none));
+        } else {
+            sb.append(getString(R.string.status_detail_injected,
+                    root.optInt("expected", 0),
+                    root.optInt("noHitFeatures", 0)));
+        }
+        JSONObject features = root.optJSONObject("features");
+        if (features != null) {
+            for (Feature f : Feature.values()) {
+                JSONObject o = features.optJSONObject(f.name());
+                if (o == null || !o.optBoolean("enabled", false)) {
+                    continue;
+                }
+                sb.append('\n').append(f.id).append("  ")
+                        .append(o.optInt("installed", 0)).append('/')
+                        .append(o.optInt("expected", 0))
+                        .append(o.optBoolean("hit", false) ? " · 已命中" : " · 未命中");
+                String failure = o.optString("lastFailure", null);
+                if (failure != null && !failure.isEmpty()) {
+                    sb.append(" · ").append(failure);
+                }
+            }
+        }
+        diag.setSummary(sb.toString());
+    }
+
+    private JSONObject readStatus() {
+        String json = StatusProvider.readState(requireContext());
+        if (json == null || json.isEmpty()) {
+            return null;
+        }
+        try {
+            return new JSONObject(json);
+        } catch (Throwable t) {
+            return null;
+        }
     }
 }

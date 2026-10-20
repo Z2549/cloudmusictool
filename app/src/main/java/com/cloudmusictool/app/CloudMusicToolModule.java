@@ -4,8 +4,7 @@ import android.content.pm.ApplicationInfo;
 import android.util.Log;
 
 import com.cloudmusictool.app.dexkit.DexKitLocator;
-import com.cloudmusictool.app.hooks.Hooks;
-import com.cloudmusictool.app.hooks.ProcessFilter;
+import com.cloudmusictool.app.hooks.Hooks;import com.cloudmusictool.app.hooks.ProcessFilter;
 
 import io.github.libxposed.api.XposedModule;
 import io.github.libxposed.api.XposedModuleInterface.ModuleLoadedParam;
@@ -28,11 +27,19 @@ public class CloudMusicToolModule extends XposedModule {
         mProcessName = param.getProcessName();
         try {
             ApplicationInfo appInfo = getModuleApplicationInfo();
-            if (appInfo != null && appInfo.nativeLibraryDir != null) {
-                DexKitLocator.setModuleNativeDir(appInfo.nativeLibraryDir);
+            if (appInfo != null) {
+                if (appInfo.nativeLibraryDir != null) {
+                    DexKitLocator.setModuleNativeDir(appInfo.nativeLibraryDir);
+                }
+                if (appInfo.sourceDir != null) {
+                    DexKitLocator.setModuleApkPath(appInfo.sourceDir);
+                }
+                if (appInfo.packageName != null) {
+                    HookState.init(appInfo.packageName);
+                }
             }
         } catch (Throwable t) {
-            log(Log.WARN, TAG, "setModuleNativeDir failed", t);
+            log(Log.WARN, TAG, "module app info unavailable", t);
         }
         log(Log.INFO, TAG, "loaded process=" + mProcessName
                 + " api=" + getApiVersion()
@@ -63,6 +70,12 @@ public class CloudMusicToolModule extends XposedModule {
             if (!VersionGate.checkVersion(this, targetVersion, config.allowUnsupportedVersion())) {
                 detach();
                 return;
+            }
+            if (Config.dexKitSelfTest()) {
+                // 隐藏自检：先异步预热，避免首次 DexKit 查询落在主线程。
+                DexKitLocator.warmUpAsync(param.getClassLoader(),
+                        "com.netease.cloudmusic.module.ad.LoadingAdManager",
+                        com.cloudmusictool.app.dexkit.DexKitAnchors.LOADING_AD_MANAGER);
             }
             if (playProcess) {
                 Hooks.installPlayOnly(this, param.getClassLoader(), config);

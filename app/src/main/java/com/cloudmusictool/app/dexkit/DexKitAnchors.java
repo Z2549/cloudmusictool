@@ -1,0 +1,109 @@
+package com.cloudmusictool.app.dexkit;
+
+/**
+ * 逻辑名 -> 真实 dex 字符串字面量表。
+ *
+ * 重要：DexKit 的 ClassMatcher.addUsingString 匹配的是「该类方法里实际使用的
+ * dex 字符串字面量」，不是类名/方法名。本表所有值均用 dexsql 的 method_strings
+ * 在 9.6.08（versionCode 9006008）上验证过，并确认只命中目标类。
+ *
+ * 维护方式：
+ *   SELECT method_class, value FROM method_strings
+ *   WHERE value='<anchor>' GROUP BY method_class;
+ * 若出现新的候选类，必须补充第二个 anchor 或改为结构匹配。
+ */
+public final class DexKitAnchors {
+
+    private DexKitAnchors() {
+    }
+
+    /** AD-01 开屏广告管理器。 */
+    public static final String[] LOADING_AD_MANAGER = {
+            "adInfoCacheEmpty",
+            "onAdGet, getFactLoadingAd addAdActivity"
+    };
+
+    /** AD-01 免广 AB 实验开关（q60.w0）。 */
+    public static final String[] Q60_W0 = {
+            "loading_ad_judge"
+    };
+
+    /** UI-03 底栏数据仓库（th0.h）。 */
+    public static final String[] TH0_H = {
+            "BottomNavigationRepository"
+    };
+
+    /** UI-03 底栏列表构造（rh0.c）；两个 anchor 组合唯一。 */
+    public static final String[] RH0_C = {
+            "tabCodeList",
+            "context"
+    };
+
+    /** UI-07 蓝牙/车载自动播放配置（tt0.d）。 */
+    public static final String[] TT0_D = {
+            "bluetoothAutoPlay2History"
+    };
+
+    /** UI-07 云村自动播放配置（vt0.r）。 */
+    public static final String[] VT0_R = {
+            "HOMEPAGE_BOTTOM_TAB_PUBLISH_GUIDE"
+    };
+
+    /** UI-07 自动播放总开关（lv0.j）。 */
+    public static final String[] LV0_J = {
+            "key_start_music_after_launch_mode_enable_"
+    };
+
+    /** AD-03 应用内更新入口（fw0.e）。 */
+    public static final String[] FW0_E = {
+            "MarketUpdate [logMarketStage] fail, stage="
+    };
+
+    /** AD-03 更新状态机（appupdate.d）。 */
+    public static final String[] APPUPDATE_D = {
+            "apkRemindVersionCode"
+    };
+
+    /** UI-07 / UI-09 用户设置聚合类（jn）。 */
+    public static final String[] JN = {
+            "MESSAGE_CENTER_NEW_SONG_VERSION_CODE_TEMP"
+    };
+
+    /** UI-02 顶部频道 ViewPager2 适配器（dr.h，继承 FragmentStateAdapter）。 */
+    public static final String[] DR_H = {
+            "RecommendTwoFlowAdapter"
+    };
+
+    /** 按逻辑名取 anchor；未知逻辑名返回 null。 */
+    public static String[] of(String logicalName) {
+        if (logicalName == null) {
+            return null;
+        }
+        switch (logicalName) {
+            case "LoadingAdManager":
+                return LOADING_AD_MANAGER;
+            case "q60.w0":
+                return Q60_W0;
+            case "th0.h":
+                return TH0_H;
+            case "rh0.c":
+                return RH0_C;
+            case "tt0.d":
+                return TT0_D;
+            case "vt0.r":
+                return VT0_R;
+            case "lv0.j":
+                return LV0_J;
+            case "fw0.e":
+                return FW0_E;
+            case "appupdate.d":
+                return APPUPDATE_D;
+            case "dr.h":
+                return DR_H;
+            case "jn":
+                return JN;
+            default:
+                return null;
+        }
+    }
+}

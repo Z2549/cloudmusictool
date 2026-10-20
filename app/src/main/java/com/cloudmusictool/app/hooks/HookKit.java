@@ -2,12 +2,17 @@ package com.cloudmusictool.app.hooks;
 
 import android.util.Log;
 
+import com.cloudmusictool.app.Config;
 import com.cloudmusictool.app.Feature;
 import com.cloudmusictool.app.HookState;
 import com.cloudmusictool.app.dexkit.DexKitLocator;
 
 import java.lang.reflect.Executable;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import io.github.libxposed.api.XposedInterface;
 import io.github.libxposed.api.XposedModule;
@@ -18,12 +23,17 @@ import io.github.libxposed.api.XposedModule;
  * 1) 先走硬编码 Class.forName / getDeclaredMethod；失败则调用 DexKitLocator 进行特征锚点兜底。
  * 2) 定位/hook 失败只记日志并返回 null/false，绝不向外抛异常。
  * 3) 每个 intercept 体整段包在 try/catch(Throwable) 内，catch 后记日志并 proceed 原逻辑。
- * 4) 命中日志固定 "<功能id> hit ..."，tag 固定 CloudMusicTool。
+ * 4) 命中日志固定 "<功能id> hit ..."，tag 固定 CloudMusicTool；按 feature 限流（5 秒 1 条，首次必打）。
  * 5) 严格禁止引用任何 androidx 类型。
  */
 final class HookKit {
 
     static final String TAG = "CloudMusicTool";
+
+    private static final String LOADING_AD_MANAGER =
+            "com.netease.cloudmusic.module.ad.LoadingAdManager";
+    private static final long HIT_WINDOW_MS = 5000L;
+    private static final Map<String, long[]> HIT_STATE = new ConcurrentHashMap<>();
 
     private HookKit() {
     }
@@ -41,25 +51,42 @@ final class HookKit {
     }
 
     static Class<?> findClass(XposedModule module, Feature f, ClassLoader cl, String name, String... anchors) {
-        try {
-            return Class.forName(name, false, cl);
-        } catch (Throwable t) {
-            if (anchors != null && anchors.length > 0) {
-                try {
-                    Class<?> fallback = DexKitLocator.findClass(cl, name, anchors);
-                    if (fallback != null) {
-                        info(module, f.id + " DexKit fallback located class " + name + " -> " + fallback.getName());
-                        return fallback;
-                    }
-                } catch (Throwable dexT) {
-                    warn(module, f.id + " DexKit class query failed for " + name + ": " + dexT.getMessage());
-                }
+        boolean selftest = Config.dexKitSelfTest()
+                && f == Feature.SPLASH_AD
+                && LOADING_AD_MANAGER.equals(name);
+        if (!selftest) {
+            try {
+                return Class.forName(name, false, cl);
+            } catch (Throwable ignored) {
+                // fall through to DexKit
             }
-            warn(module, f.id + " skip: class not found " + name);
-            HookState.markNotFound(f);
-            HookState.note(f, "类未找到 " + name);
-            return null;
         }
+        if (anchors != null && anchors.length > 0) {
+            try {
+                long start = System.currentTimeMillis();
+                Class<?> fallback = DexKitLocator.findClass(cl, name, anchors);
+                long elapsed = System.currentTimeMillis() - start;
+                if (fallback != null) {
+                    if (selftest) {
+                        info(module, "DexKit selftest located=" + fallback.getName()
+                                + " elapsed=" + elapsed + "ms");
+                    }
+                    info(module, f.id + " DexKit fallback located class " + name + " -> " + fallback.getName());
+                    return fallback;
+                }
+                if (selftest) {
+                    info(module, "DexKit selftest located=null elapsed=" + elapsed + "ms");
+                }
+            } catch (Throwable dexT) {
+                warn(module, f.id + " DexKit class query failed for " + name + ": " + dexT.getMessage());
+            }
+        } else if (selftest) {
+            warn(module, "DexKit selftest requested but no anchors for " + name);
+        }
+        warn(module, f.id + " skip: class not found " + name);
+        HookState.markNotFound(f, "class:" + name);
+        HookState.note(f, "类未找到 " + name);
+        return null;
     }
 
     static Class<?> findClass(XposedModule module, Feature f, ClassLoader cl, String name) {
@@ -84,7 +111,7 @@ final class HookKit {
         if (m == null) {
             warn(module, f.id + " skip: method not found "
                     + (cls == null ? "?" : cls.getName()) + "#" + name);
-            HookState.markNotFound(f);
+            HookState.markNotFound(f, "method:" + (cls == null ? "?" : cls.getName()) + "#" + name);
             HookState.note(f, "方法未找到 " + name);
         }
         return m;
@@ -100,7 +127,7 @@ final class HookKit {
         if (m == null) {
             warn(module, f.id + " skip: method not found "
                     + (cls == null ? "?" : cls.getName()) + "#" + name);
-            HookState.markNotFound(f);
+            HookState.markNotFound(f, "method:" + (cls == null ? "?" : cls.getName()) + "#" + name);
             HookState.note(f, "方法未找到 " + name);
         }
         return m;
@@ -124,7 +151,7 @@ final class HookKit {
         if (m == null) {
             warn(module, f.id + " skip: method not found "
                     + (cls == null ? "?" : cls.getName()) + "#" + name);
-            HookState.markNotFound(f);
+            HookState.markNotFound(f, "method:" + (cls == null ? "?" : cls.getName()) + "#" + name);
             HookState.note(f, "方法未找到 " + name);
         }
         return m;
@@ -232,6 +259,9 @@ final class HookKit {
         if (m == null) {
             return false;
         }
+        if (!validateReturnType(module, f, label, m, hooker)) {
+            return false;
+        }
         try {
             module.hook(m)
                     .setId(f.id + "#" + label)
@@ -242,37 +272,198 @@ final class HookKit {
             return true;
         } catch (Throwable t) {
             error(module, f.id + " hook failed " + label, t);
-            HookState.markNotFound(f);
+            HookState.markNotFound(f, "hook:" + label);
             HookState.note(f, "hook 失败 " + label);
             return false;
         }
     }
 
+    /**
+     * 安装前校验返回值：constBool 只能挂 boolean/Boolean，skipVoid 不能挂非 void 原始类型。
+     * 不匹配时拒绝安装并 WARN，避免“hook 静默不生效”或返回 null 导致宿主 NPE。
+     */
+    private static boolean validateReturnType(XposedModule module, Feature f, String label,
+                                              Executable m, XposedInterface.Hooker hooker) {
+        if (!(m instanceof Method)) {
+            return true;
+        }
+        Class<?> rt = ((Method) m).getReturnType();
+        if (hooker instanceof ConstBoolHooker) {
+            if (rt != boolean.class && rt != Boolean.class) {
+                warn(module, f.id + " return type mismatch: " + label + " -> "
+                        + rt.getName() + " (constBool requires boolean); not installed");
+                HookState.markNotFound(f, "rettype:" + label);
+                HookState.note(f, "返回类型不匹配 " + label);
+                return false;
+            }
+        } else if (hooker instanceof SkipVoidHooker) {
+            if (rt.isPrimitive() && rt != void.class) {
+                warn(module, f.id + " return type mismatch: " + label + " -> "
+                        + rt.getName() + " (skipVoid cannot return null); not installed");
+                HookState.markNotFound(f, "rettype:" + label);
+                HookState.note(f, "返回类型不匹配 " + label);
+                return false;
+            }
+        }
+        return true;
+    }
+
     static void hit(XposedModule module, Feature f, String detail) {
-        module.log(Log.INFO, TAG, f.id + " hit " + detail);
+        long now = System.currentTimeMillis();
+        // 按 label 限流：每个挂载点首次必打，之后 5 秒最多 1 条。
+        String key = f.id + "|" + detail;
+        long[] state = HIT_STATE.computeIfAbsent(key, k -> new long[]{0L, 0L});
+        boolean log;
+        synchronized (state) {
+            log = state[1] == 0L || now - state[0] >= HIT_WINDOW_MS;
+            if (log) {
+                state[0] = now;
+                state[1]++;
+            }
+        }
+        HookState.hit(f);
+        if (log) {
+            module.log(Log.INFO, TAG, f.id + " hit " + detail);
+        }
     }
 
     static XposedInterface.Hooker skipVoid(XposedModule module, Feature f, String detail) {
-        return chain -> {
-            try {
-                hit(module, f, detail);
-                return null;
-            } catch (Throwable t) {
-                error(module, f.id + " intercept error " + detail, t);
-                return chain.proceed();
-            }
-        };
+        return new SkipVoidHooker(module, f, detail);
     }
 
     static XposedInterface.Hooker constBool(XposedModule module, Feature f, String detail, boolean value) {
-        return chain -> {
+        return new ConstBoolHooker(module, f, detail, value);
+    }
+
+    private static final class SkipVoidHooker implements XposedInterface.Hooker {
+        private final XposedModule module;
+        private final Feature feature;
+        private final String detail;
+
+        SkipVoidHooker(XposedModule module, Feature feature, String detail) {
+            this.module = module;
+            this.feature = feature;
+            this.detail = detail;
+        }
+
+        @Override
+        public Object intercept(XposedInterface.Chain chain) throws Throwable {
             try {
-                hit(module, f, detail);
-                return value ? Boolean.TRUE : Boolean.FALSE;
+                hit(module, feature, detail);
+                return null;
             } catch (Throwable t) {
-                error(module, f.id + " intercept error " + detail, t);
+                error(module, feature.id + " intercept error " + detail, t);
                 return chain.proceed();
             }
-        };
+        }
+    }
+
+    private static final class ConstBoolHooker implements XposedInterface.Hooker {
+        private final XposedModule module;
+        private final Feature feature;
+        private final String detail;
+        private final boolean value;
+
+        ConstBoolHooker(XposedModule module, Feature feature, String detail, boolean value) {
+            this.module = module;
+            this.feature = feature;
+            this.detail = detail;
+            this.value = value;
+        }
+
+        @Override
+        public Object intercept(XposedInterface.Chain chain) throws Throwable {
+            try {
+                hit(module, feature, detail);
+                return value ? Boolean.TRUE : Boolean.FALSE;
+            } catch (Throwable t) {
+                error(module, feature.id + " intercept error " + detail, t);
+                return chain.proceed();
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // 反射样板（原分散在各 hook 文件，统一收口）
+    // ------------------------------------------------------------------
+
+    static boolean shouldKeepTab(Object item, Set<String> keepSet) {
+        return shouldKeep(item, keepSet,
+                new String[]{"getTitle", "getTabName", "getName", "getCode", "getTabTitle", "getTabCode"});
+    }
+
+    static boolean shouldKeepItem(Object item, Set<String> keepSet) {
+        return shouldKeep(item, keepSet,
+                new String[]{"getTitle", "getChannelCode", "getCode", "getName"});
+    }
+
+    private static boolean shouldKeep(Object item, Set<String> keepSet, String[] methodNames) {
+        if (item == null || keepSet == null || keepSet.isEmpty()) {
+            return false;
+        }
+        for (String name : methodNames) {
+            Object val = invokeNoArg(item, name);
+            if (val != null && keepSet.contains(val.toString().trim())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    static String firstStringGetter(Object item) {
+        if (item == null) {
+            return null;
+        }
+        String[] names = {"getTitle", "getName", "getTabName"};
+        for (String n : names) {
+            Object v = invokeNoArg(item, n);
+            if (v != null) {
+                return v.toString().trim();
+            }
+        }
+        return null;
+    }
+
+    static Field findField(Class<?> cls, String name) {
+        Class<?> c = cls;
+        while (c != null && c != Object.class) {
+            try {
+                return c.getDeclaredField(name);
+            } catch (NoSuchFieldException ignored) {
+                c = c.getSuperclass();
+            }
+        }
+        return null;
+    }
+
+    static Object invokeNoArg(Object target, String method) {
+        if (target == null) {
+            return null;
+        }
+        try {
+            Method m = target.getClass().getMethod(method);
+            m.setAccessible(true);
+            return m.invoke(target);
+        } catch (Throwable ignored) {
+        }
+        try {
+            Method m = target.getClass().getDeclaredMethod(method);
+            m.setAccessible(true);
+            return m.invoke(target);
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    static void hookNull(XposedModule module, Feature f, Class<?> cls, String name) {
+        Method m = findMethod(module, f, cls, name);
+        install(module, f, cls.getSimpleName() + "#" + name, m, chain -> {
+            try {
+                hit(module, f, cls.getSimpleName() + "." + name + " -> null");
+                return null;
+            } catch (Throwable t) {
+                return chain.proceed();
+            }
+        });
     }
 }

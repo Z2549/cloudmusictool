@@ -31,7 +31,7 @@ public final class HintHooks {
         for (String clsName : hintViewClasses) {
             try {
                 String simpleName = clsName.substring(clsName.lastIndexOf('.') + 1);
-                Class<?> cls = HookKit.findClass(module, f, cl, clsName, simpleName);
+                Class<?> cls = HookKit.findClass(module, f, cl, clsName);
                 if (cls != null) {
                     Method m = HookKit.findByNameQuiet(cls, "maybeDisplayHint");
                     if (m != null) {
@@ -57,7 +57,7 @@ public final class HintHooks {
 
         // 2. nr2.c.checkAndShowYouthDialog(Context)Z -> false
         try {
-            Class<?> nr2c = HookKit.findClass(module, f, cl, "nr2.c", "checkAndShowYouthDialog");
+            Class<?> nr2c = HookKit.findClass(module, f, cl, "nr2.c");
             if (nr2c != null) {
                 Method mYouth = HookKit.findMethodQuiet(nr2c, "checkAndShowYouthDialog", Context.class);
                 if (mYouth == null) {

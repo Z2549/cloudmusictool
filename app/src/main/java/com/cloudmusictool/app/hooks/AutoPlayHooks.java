@@ -1,6 +1,7 @@
 package com.cloudmusictool.app.hooks;
 
 import com.cloudmusictool.app.Feature;
+import com.cloudmusictool.app.dexkit.DexKitAnchors;
 
 import java.lang.reflect.Method;
 
@@ -20,8 +21,7 @@ public final class AutoPlayHooks {
         // 1. SettingActivity.V8()Z -> false
         try {
             Class<?> settingCls = HookKit.findClass(module, f, cl,
-                    "com.netease.cloudmusic.music.biz.setting.activity.SettingActivity",
-                    "SettingActivity", "V8");
+                    "com.netease.cloudmusic.music.biz.setting.activity.SettingActivity");
             if (settingCls != null) {
                 Method mV8 = HookKit.findMethodQuiet(settingCls, "V8");
                 if (mV8 != null) {
@@ -37,7 +37,7 @@ public final class AutoPlayHooks {
         try {
             Class<?> jnCls = HookKit.findClass(module, f, cl,
                     "com.netease.cloudmusic.utils.jn",
-                    "jn", "m0");
+                    DexKitAnchors.JN);
             if (jnCls != null) {
                 Method mM0 = HookKit.findMethodQuiet(jnCls, "m0");
                 if (mM0 != null) {
@@ -51,7 +51,7 @@ public final class AutoPlayHooks {
 
         // 3. tt0.d: a()Z / d()Z -> false
         try {
-            Class<?> tt0d = HookKit.findClass(module, f, cl, "tt0.d", "tt0.d");
+            Class<?> tt0d = HookKit.findClass(module, f, cl, "tt0.d", DexKitAnchors.TT0_D);
             if (tt0d != null) {
                 Method ma = HookKit.findMethodQuiet(tt0d, "a");
                 if (ma != null) {
@@ -70,7 +70,7 @@ public final class AutoPlayHooks {
 
         // 4. vt0.r: j()Z -> false
         try {
-            Class<?> vt0r = HookKit.findClass(module, f, cl, "vt0.r", "vt0.r");
+            Class<?> vt0r = HookKit.findClass(module, f, cl, "vt0.r", DexKitAnchors.VT0_R);
             if (vt0r != null) {
                 Method mj = HookKit.findMethodQuiet(vt0r, "j");
                 if (mj != null) {
@@ -84,7 +84,7 @@ public final class AutoPlayHooks {
 
         // 5. lv0.j.e() -> AutoPlayConfig(false, false)
         try {
-            Class<?> lv0j = HookKit.findClass(module, f, cl, "lv0.j", "AutoPlayConfig");
+            Class<?> lv0j = HookKit.findClass(module, f, cl, "lv0.j", DexKitAnchors.LV0_J);
             if (lv0j != null) {
                 Method me = HookKit.findMethodQuiet(lv0j, "e");
                 if (me == null) {

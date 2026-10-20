@@ -20,8 +20,7 @@ public final class OaidHooks {
         // 1. MusicOaidUploadManager.o(String)V -> skipVoid
         try {
             Class<?> managerCls = HookKit.findClass(module, f, cl,
-                    "com.netease.cloudmusic.oaid.MusicOaidUploadManager",
-                    "MusicOaidUploadManager");
+                    "com.netease.cloudmusic.oaid.MusicOaidUploadManager");
             if (managerCls != null) {
                 Method mo = HookKit.findMethodQuiet(managerCls, "o", String.class);
                 if (mo == null) {
@@ -39,8 +38,7 @@ public final class OaidHooks {
         // 2. AdOaidUploadTask.init()V -> skipVoid
         try {
             Class<?> taskCls = HookKit.findClass(module, f, cl,
-                    "com.netease.cloudmusic.process.task.app.create.AdOaidUploadTask",
-                    "AdOaidUploadTask");
+                    "com.netease.cloudmusic.process.task.app.create.AdOaidUploadTask");
             if (taskCls != null) {
                 Method mInit = HookKit.findMethodQuiet(taskCls, "init");
                 if (mInit != null) {
