@@ -17,7 +17,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 /**
  * 模块主入口 Activity。
- * Material 3 DayNight，三 Tab 结构（功能 / 首页定制 / 关于）。
+ * Material 3 DayNight，四 Tab 结构（功能 / 首页定制 / 实验 / 关于）。
  */
 public class MainActivity extends AppCompatActivity {
 
@@ -81,6 +81,9 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.nav_home) {
             if (current instanceof HomeCustomizeFragment) return;
             switchFragment(new HomeCustomizeFragment());
+        } else if (id == R.id.nav_experiments) {
+            if (current instanceof ExperimentFragment) return;
+            switchFragment(new ExperimentFragment());
         } else if (id == R.id.nav_about) {
             if (current instanceof AboutFragment) return;
             switchFragment(new AboutFragment());
@@ -99,6 +102,8 @@ public class MainActivity extends AppCompatActivity {
             ((SettingsFragment) f).refresh();
         } else if (f instanceof HomeCustomizeFragment) {
             ((HomeCustomizeFragment) f).refresh();
+        } else if (f instanceof ExperimentFragment) {
+            ((ExperimentFragment) f).refresh();
         }
     }
 

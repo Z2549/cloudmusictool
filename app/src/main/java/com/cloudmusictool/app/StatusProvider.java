@@ -23,9 +23,14 @@ public class StatusProvider extends ContentProvider {
     public static final String AUTHORITY_SUFFIX = ".status";
     public static final String KEY_JSON = "json";
     public static final String KEY_OK = "ok";
+    /** 回写类型：缺省 mounts（Hook 健康度），experiments 为 ABTest 观测。 */
+    public static final String KEY_TYPE = "type";
+    public static final String TYPE_MOUNTS = "mounts";
+    public static final String TYPE_EXPERIMENTS = "experiments";
 
     static final String PREFS = "hook_status";
     static final String KEY_STATE = "state";
+    static final String KEY_EXPERIMENTS = "experiments";
 
     private static final String TAG = "CloudMusicTool";
     private static final String TARGET_PACKAGE = "com.netease.cloudmusic";
@@ -60,8 +65,10 @@ public class StatusProvider extends ContentProvider {
             Log.w(TAG, "status report rejected: invalid payload");
             return null;
         }
+        String type = extras.getString(KEY_TYPE, TYPE_MOUNTS);
+        String prefsKey = TYPE_EXPERIMENTS.equals(type) ? KEY_EXPERIMENTS : KEY_STATE;
         try {
-            prefs().edit().putString(KEY_STATE, json).apply();
+            prefs().edit().putString(prefsKey, json).apply();
         } catch (Throwable t) {
             Log.w(TAG, "status store failed", t);
             return null;
@@ -107,6 +114,16 @@ public class StatusProvider extends ContentProvider {
             context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                     .edit().remove(KEY_STATE).apply();
         } catch (Throwable ignored) {
+        }
+    }
+
+    /** 模块 App 内读取最近一次 ABTest 观测 JSON（type=experiments）。 */
+    public static String readExperiments(Context context) {
+        try {
+            return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                    .getString(KEY_EXPERIMENTS, null);
+        } catch (Throwable t) {
+            return null;
         }
     }
 

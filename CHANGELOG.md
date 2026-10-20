@@ -1,5 +1,41 @@
 # Changelog
 
+## 1.2.0 - 2026-10-20
+
+ABTest 实验控制版（versionCode 4）。真机环境：25102RKBEC / Android 17 / LSPosed 2.2.1 / 网易云音乐 9.6.08。
+
+### 新增
+
+- **实验页（第 4 个 Tab）**：只读展示实际命中的 ABTest（key / 分组 / 来源 / 次数），
+  数据由目标进程经 `StatusProvider` 回写；冷启动实测记录 200 个 key，source 覆盖 libra / old / startup。
+- **白名单强开**：22 个 curated 体验 key，单 key 选择 `c/t/t1/t2/t3/t4`；
+  已探测但未收录的 key 可手动「提升为强开」；黑名单 key 显示「禁止强开」。
+- **一键恢复默认**：清空所有强开配置；配置写入 remote prefs，重启网易云生效。
+
+### 安全
+
+- `AbTestPolicy` 是白/黑名单单一来源，只做精确匹配；黑名单覆盖
+  VIP/付费/版权/音质/试听/订单/地区/青少年/登录/Cookie/鉴权/风控/免流/免广告，
+  以及 `boot-`、`kv-`/`fh-kv-`、`wait-task-`、`cold-start-` 等前缀。
+- 强开只改 `abtestgroup`，不改 `status`/`clientConfig`（合成对象除外）；启动 AB 只读。
+- `:play` 进程不 init/flush 实验观测，避免空快照覆盖主进程数据。
+- 写入失败（框架未连接）会明确提示「配置未保存」，不再静默写本地。
+
+### 验证
+
+- 真机：观测 200 个实验；`minibarMarquee=t4`、`aosApiHttps=t4` 强开日志确认；
+  一键恢复后 `forceKeys=0`，无 force 日志、无崩溃。
+- 32 个单测通过（新增 `AbTestPolicyTest` 9 个）；lint 0 error；release 构建成功。
+
+### 已知限制
+
+- `tabMerge` 在 9.6.08 未被查询，无法用它做 UI 分组变化回归；强开链路改用 `aosApiHttps`/`minibarMarquee` 验证。
+- 合成 config 的 `clientConfig` 为空 Map，`checkExperimentWithParam` 走默认值；本期不做参数强开。
+- `StartupABManager#getGroup` 只观测，不强开。
+- 黑名单 UI 展示已真机确认，但未逐项点选全部黑名单 key。
+
+---
+
 ## 1.1.0 - 2026-10-20
 
 可信度收尾版（versionCode 3）。真机环境：25102RKBEC / Android 17 / LSPosed 2.2.1 / 网易云音乐 9.6.08。

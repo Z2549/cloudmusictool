@@ -3,9 +3,13 @@ package com.cloudmusictool.app;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import org.json.JSONObject;
+
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -29,6 +33,9 @@ public final class Config {
     public static final String KEY_BOTTOM_NAV_KEEP = "bottom_nav_keep";
     public static final String KEY_STARTUP_TASK_BLOCKLIST = "startup_task_blocklist";
 
+    /** ABTest 强制分组：JSON 对象 {"<key>":"<group>"}，只存用户显式开启的 key。 */
+    public static final String KEY_ABTEST_FORCE_MAP = "abtest_force_map";
+
     /** 隐藏自检开关：设置页“关于”连点 7 次后可见。开启后 AD-01 强制走 DexKit。 */
     public static final String KEY_DEXKIT_SELFTEST = "dexkit_selftest";
     public static final boolean DEFAULT_DEXKIT_SELFTEST = false;
@@ -40,6 +47,7 @@ public final class Config {
     private final Map<Feature, Boolean> mEnabled = new EnumMap<>(Feature.class);
     private boolean mAllowUnsupported = DEFAULT_ALLOW_UNSUPPORTED;
     private final Map<String, Set<String>> mCustomSets = new java.util.HashMap<>();
+    private Map<String, String> mAbTestForceMap = Collections.emptyMap();
 
     private Config() {
         for (Feature f : Feature.values()) {
@@ -67,6 +75,12 @@ public final class Config {
                 loadSet(sp, KEY_TOP_CHANNELS_KEEP, config.mCustomSets);
                 loadSet(sp, KEY_BOTTOM_NAV_KEEP, config.mCustomSets);
                 loadSet(sp, KEY_STARTUP_TASK_BLOCKLIST, config.mCustomSets);
+                try {
+                    config.mAbTestForceMap = parseForceMap(
+                            sp.getString(KEY_ABTEST_FORCE_MAP, "{}"));
+                } catch (Throwable t) {
+                    module.log(Log.WARN, TAG, "abtest_force_map unreadable, ignored", t);
+                }
             }
         } catch (Throwable t) {
             module.log(Log.WARN, TAG, "remote prefs unavailable: use built-in defaults", t);
@@ -101,6 +115,59 @@ public final class Config {
 
     public boolean enabled(Feature f) {
         return Boolean.TRUE.equals(mEnabled.get(f));
+    }
+
+    /**
+     * 已过滤的强制分组表。非法 JSON、非法 key/group、黑名单 key 一律丢弃；
+     * key 必须精确命中 curated 或已提升集合（提升集合 = 表内 key - curated）。
+     */
+    public Map<String, String> getAbTestForceMap() {
+        return mAbTestForceMap;
+    }
+
+    static Map<String, String> parseForceMap(String raw) {
+        if (raw == null || raw.trim().isEmpty()) {
+            return Collections.emptyMap();
+        }
+        try {
+            JSONObject obj = new JSONObject(raw);
+            Map<String, String> candidates = new LinkedHashMap<>();
+            Iterator<String> keys = obj.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                if (key == null || key.isEmpty()) {
+                    continue;
+                }
+                String group = obj.optString(key, null);
+                if (group == null || group.isEmpty()) {
+                    continue;
+                }
+                candidates.put(key, group);
+            }
+            if (candidates.isEmpty()) {
+                return Collections.emptyMap();
+            }
+            Set<String> promoted = new HashSet<>(candidates.keySet());
+            promoted.removeAll(AbTestPolicy.CURATED);
+            Map<String, String> filtered = new LinkedHashMap<>();
+            for (Map.Entry<String, String> e : candidates.entrySet()) {
+                String key = e.getKey();
+                String group = e.getValue();
+                if (!AbTestPolicy.isAllowed(key, promoted)) {
+                    continue;
+                }
+                if (!AbTestPolicy.isValidGroup(group)) {
+                    continue;
+                }
+                filtered.put(key, group);
+            }
+            if (filtered.isEmpty()) {
+                return Collections.emptyMap();
+            }
+            return Collections.unmodifiableMap(filtered);
+        } catch (Throwable t) {
+            return Collections.emptyMap();
+        }
     }
 
     public boolean anyEnabled() {

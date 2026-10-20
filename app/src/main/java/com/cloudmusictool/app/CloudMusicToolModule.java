@@ -4,6 +4,7 @@ import android.content.pm.ApplicationInfo;
 import android.util.Log;
 
 import com.cloudmusictool.app.dexkit.DexKitLocator;
+import com.cloudmusictool.app.hooks.ExperimentState;
 import com.cloudmusictool.app.hooks.Hooks;import com.cloudmusictool.app.hooks.ProcessFilter;
 
 import io.github.libxposed.api.XposedModule;
@@ -36,6 +37,10 @@ public class CloudMusicToolModule extends XposedModule {
                 }
                 if (appInfo.packageName != null) {
                     HookState.init(appInfo.packageName);
+                    // :play 只做音频贴片拦截，不参与 ABTest 观测，避免空快照覆盖主进程数据。
+                    if (!ProcessFilter.isPlayProcess(mProcessName)) {
+                        ExperimentState.init(appInfo.packageName);
+                    }
                 }
             }
         } catch (Throwable t) {
@@ -81,6 +86,8 @@ public class CloudMusicToolModule extends XposedModule {
                 Hooks.installPlayOnly(this, param.getClassLoader(), config);
             } else {
                 Hooks.installAll(this, param.getClassLoader(), config);
+                // 安装结束后的最终快照；运行期由 ExperimentState 的 2 秒节流继续回写。
+                ExperimentState.flush();
             }
         } catch (Throwable t) {
             log(Log.ERROR, TAG, "install aborted", t);

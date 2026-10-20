@@ -25,7 +25,9 @@ public final class Hooks {
             return;
         }
         if (!config.anyEnabled()) {
-            module.log(Log.INFO, TAG, "all features disabled, nothing to hook");
+            module.log(Log.INFO, TAG, "all features disabled, only ABTest observer");
+            installAbTest(module, cl, config);
+            HookState.flush();
             return;
         }
         for (Feature f : Feature.values()) {
@@ -41,9 +43,19 @@ public final class Hooks {
             installOne(module, cl, f, config);
         }
         HookState.flush();
+        // ABTest 不是 Feature 开关：始终安装只读观测；forceMap 为空时不改任何返回值。
+        installAbTest(module, cl, config);
     }
 
-    /** :play 进程只安装音频贴片拦截。 */
+    private static void installAbTest(XposedModule module, ClassLoader cl, Config config) {
+        try {
+            AbTestHooks.install(module, cl, config);
+        } catch (Throwable t) {
+            module.log(Log.ERROR, TAG, "ABTEST install threw", t);
+        }
+    }
+
+    /** :play 进程只安装音频贴片拦截；不安装 AbTestHooks，也不写 experiments。 */
     public static void installPlayOnly(XposedModule module, ClassLoader cl, Config config) {
         Feature f = Feature.AUDIO_CLIP_AD;
         if (!config.enabled(f)) {

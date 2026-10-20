@@ -49,6 +49,55 @@ final class ConfigStore {
         }
     }
 
+    String getString(String key, String def) {
+        try {
+            return (mRemote != null ? mRemote : mLocal).getString(key, def);
+        } catch (Throwable t) {
+            return def;
+        }
+    }
+
+    /**
+     * 写入字符串配置。
+     *
+     * @return 只有 remote prefs 可用且提交成功才返回 true。
+     *         框架未绑定时仍回退写本地（保持原有降级行为），但明确返回 false，
+     *         避免调用方把“写本地”当成“目标进程已生效”。
+     */
+    boolean putString(String key, String value) {
+        if (mRemote == null) {
+            try {
+                SharedPreferences.Editor editor = mLocal.edit();
+                if (value == null) {
+                    editor.remove(key);
+                } else {
+                    editor.putString(key, value);
+                }
+                editor.commit();
+            } catch (Throwable t) {
+                Log.w(TAG, "local config write failed: " + key, t);
+            }
+            Log.w(TAG, "config written to LOCAL prefs (framework not bound): " + key);
+            return false;
+        }
+        try {
+            SharedPreferences.Editor editor = mRemote.edit();
+            if (value == null) {
+                editor.remove(key);
+            } else {
+                editor.putString(key, value);
+            }
+            boolean ok = editor.commit();
+            if (!ok) {
+                Log.w(TAG, "remote config write rejected: " + key);
+            }
+            return ok;
+        } catch (Throwable t) {
+            Log.w(TAG, "remote config write failed: " + key, t);
+            return false;
+        }
+    }
+
     Set<String> getStringSet(String key, Set<String> def) {
         SharedPreferences sp = mRemote != null ? mRemote : mLocal;
         try {

@@ -29,7 +29,41 @@
     <!-- 底栏 -->
     <string name="nav_features">功能</string>
     <string name="nav_home">首页定制</string>
+    <string name="nav_experiments">实验</string>
     <string name="nav_about">关于</string>
+
+    <!-- 实验页 -->
+    <string name="experiment_section_notice">实验说明</string>
+    <string name="experiment_notice_title">注意事项</string>
+    <string name="experiment_warning">强开实验可能导致界面异常；每次只开一个；重启网易云生效；默认关闭。</string>
+    <string name="experiment_section_curated">可强开实验</string>
+    <string name="experiment_curated_summary">观测分组: %1$s · 当前强制: %2$s</string>
+    <string name="experiment_not_observed">未观测</string>
+    <string name="experiment_unknown_group">未知</string>
+    <string name="experiment_force_none">不强制</string>
+    <string name="experiment_group_dialog_title">选择强制分组：%1$s</string>
+    <string name="experiment_promote_denied">该实验不允许强开</string>
+    <string name="experiment_saved">已保存，重启网易云音乐生效</string>
+    <string name="experiment_save_failed">框架未连接，配置未保存</string>
+    <string name="experiment_section_observed">已探测实验</string>
+    <string name="experiment_observed_empty">暂无观测数据。启动网易云音乐后点击“刷新”重新读取。</string>
+    <string name="experiment_observed_summary">%1$s · %2$d 次 · %3$s</string>
+    <string name="experiment_blocked">禁止强开</string>
+    <string name="experiment_forced_mark">已强开: %1$s</string>
+    <string name="experiment_refresh">刷新观测数据</string>
+    <string name="experiment_refresh_summary">重新读取目标进程回写的实验命中记录</string>
+    <string name="experiment_refreshed">已重新读取观测数据</string>
+    <string name="experiment_section_forced">已强开</string>
+    <string name="experiment_forced_empty">当前没有强开的实验</string>
+    <string name="experiment_forced_summary">强制分组: %1$s · 点击取消</string>
+    <string name="experiment_cancel_title">取消强开</string>
+    <string name="experiment_cancel_message">取消后重启网易云音乐即可恢复默认分组。</string>
+    <string name="experiment_cancelled">已取消，重启网易云音乐生效</string>
+    <string name="experiment_reset">一键恢复默认</string>
+    <string name="experiment_reset_summary">清空全部强开配置（当前 %1$d 项）</string>
+    <string name="experiment_reset_title">恢复默认</string>
+    <string name="experiment_reset_message">将清空所有强开配置，重启网易云音乐后生效。</string>
+    <string name="experiment_reset_done">已恢复默认，重启网易云音乐生效</string>
 
     <!-- 分组 -->
     <string name="group_ads">广告拦截</string>
