@@ -89,6 +89,13 @@ public class ExperimentFragment extends PreferenceFragmentCompat {
         notice.setSelectable(false);
         notice.setPersistent(false);
         category.addPreference(notice);
+
+        Preference groupHelp = new Preference(ctx);
+        groupHelp.setTitle(R.string.experiment_group_help_title);
+        groupHelp.setSummary(R.string.experiment_group_help_summary);
+        groupHelp.setSelectable(false);
+        groupHelp.setPersistent(false);
+        category.addPreference(groupHelp);
     }
 
     private void addCurated(PreferenceScreen screen, Context ctx,
@@ -110,8 +117,9 @@ public class ExperimentFragment extends PreferenceFragmentCompat {
 
             Preference p = new Preference(ctx);
             p.setKey("curated_" + key);
-            p.setTitle(key);
-            p.setSummary(getString(R.string.experiment_curated_summary, observedGroup, forced));
+            p.setTitle(AbTestDescriptions.title(key) + "（" + key + "）");
+            p.setSummary(AbTestDescriptions.description(key) + "\n"
+                    + getString(R.string.experiment_curated_summary, observedGroup, forced));
             p.setPersistent(false);
             p.setOnPreferenceClickListener(pref -> {
                 showGroupDialog(curatedKey, forceMap.get(curatedKey), false);

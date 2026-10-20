@@ -39,6 +39,8 @@
     <string name="experiment_section_notice">实验说明</string>
     <string name="experiment_notice_title">注意事项</string>
     <string name="experiment_warning">强开实验可能导致界面异常；每次只开一个；重启网易云生效；默认关闭。</string>
+    <string name="experiment_group_help_title">分组说明</string>
+    <string name="experiment_group_help_summary">c 通常为对照组；t/t1~t4 为不同实验组。具体行为由服务端配置决定，强开可能导致界面差异。</string>
     <string name="experiment_section_curated">可强开实验</string>
     <string name="experiment_curated_summary">观测分组: %1$s · 当前强制: %2$s</string>
     <string name="experiment_not_observed">未观测</string>

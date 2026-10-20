@@ -2,9 +2,10 @@
 
 网易云音乐 Android 客户端的 LSPosed 体验优化模块：去广告、精简界面、收敛弹窗、隐私加固。
 
-> 当前版本 **2.0.0**（2026-10-20，versionCode 5）。已在 25102RKBEC 真机验证
+> 当前版本 **2.0.1**（2026-10-20，versionCode 6）。已在 25102RKBEC 真机验证
 > （Android 17 / LSPosed 2.2.1 / 网易云音乐 9.6.08）。
-> 2.0.0 把挂载点坐标抽离为 Profile，功能与 1.2.0 行为等价，仍只适配 9.6.08。
+> 2.0.0 把挂载点坐标抽离为 Profile，功能与 1.2.0 行为等价，仍只适配 9.6.08；
+> 2.0.1 为实验页补充中文名、说明与分组含义。
 > 与网易官方无任何关联，仅供学习研究和个人设备使用。
 
 **仓库**：<https://github.com/yigenhuobah/cloudmusictool> ｜ **下载**：[Releases](https://github.com/yigenhuobah/cloudmusictool/releases)
