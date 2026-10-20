@@ -2,6 +2,10 @@ package com.cloudmusictool.app.hooks;
 
 import com.cloudmusictool.app.AbTestPolicy;
 import com.cloudmusictool.app.Config;
+import com.cloudmusictool.app.profile.MountResolver;
+import com.cloudmusictool.app.profile.MountSpec;
+import com.cloudmusictool.app.profile.ProfileRegistry;
+import com.cloudmusictool.app.profile.TargetProfile;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -88,8 +92,8 @@ public final class AbTestHooks {
 
     private static void installManagerHook(XposedModule module, ClassLoader cl) {
         try {
-            Class<?> cls = Class.forName(CLS_MANAGER, false, cl);
-            Method m = cls.getDeclaredMethod("checkExperiment", String.class, boolean.class);
+            Class<?> cls = findClass(module, cl, CLS_MANAGER);
+            Method m = findMethod(module, cls, "checkExperiment", null, String.class, boolean.class);
             hook(module, "ABTestManagerImpl#checkExperiment", m, chain -> {
                 Object result = chain.proceed();
                 try {
@@ -120,8 +124,8 @@ public final class AbTestHooks {
     private static void installGroupKeysHook(XposedModule module, ClassLoader cl,
                                              String className, String label) {
         try {
-            Class<?> cls = Class.forName(className, false, cl);
-            Method m = cls.getDeclaredMethod("getGroupKeys");
+            Class<?> cls = findClass(module, cl, className);
+            Method m = findMethod(module, cls, "getGroupKeys", String.class);
             hook(module, label, m, chain -> {
                 try {
                     Object self = chain.getThisObject();
@@ -143,8 +147,8 @@ public final class AbTestHooks {
 
     private static void installModelHook(XposedModule module, ClassLoader cl) {
         try {
-            Class<?> cls = Class.forName(CLS_MODEL, false, cl);
-            Method m = cls.getDeclaredMethod("x", String.class, boolean.class);
+            Class<?> cls = findClass(module, cl, CLS_MODEL);
+            Method m = findMethod(module, cls, "x", null, String.class, boolean.class);
             hook(module, "abtest2.b#x", m, chain -> {
                 Object result = chain.proceed();
                 try {
@@ -174,8 +178,8 @@ public final class AbTestHooks {
 
     private static void installStartupHook(XposedModule module, ClassLoader cl) {
         try {
-            Class<?> cls = Class.forName(CLS_STARTUP_AB, false, cl);
-            Method m = cls.getDeclaredMethod("getGroup", String.class);
+            Class<?> cls = findClass(module, cl, CLS_STARTUP_AB);
+            Method m = findMethod(module, cls, "getGroup", String.class, String.class);
             hook(module, "StartupABManager#getGroup", m, chain -> {
                 Object result = chain.proceed();
                 try {
@@ -190,6 +194,69 @@ public final class AbTestHooks {
         } catch (Throwable t) {
             HookKit.warn(module, "ABTEST skip StartupABManager#getGroup: " + t.getMessage());
         }
+    }
+
+    /**
+     * ABTest 坐标同样走多版本 Profile：先查活动 Profile 的类坐标，
+     * 失败回退硬编码类名。ABTEST 不是 Feature，不参与 HookState critical 统计。
+     */
+    private static Class<?> findClass(XposedModule module, ClassLoader cl, String className)
+            throws ClassNotFoundException {
+        try {
+            TargetProfile profile = ProfileRegistry.active();
+            if (profile != null) {
+                MountSpec spec = profile.findClassSpec(className);
+                if (spec != null) {
+                    Class<?> resolved = MountResolver.resolveClass(spec, cl);
+                    if (resolved != null) {
+                        HookKit.info(module, "ABTEST profile class " + className + " -> " + spec.id);
+                        return resolved;
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            HookKit.warn(module, "ABTEST profile class resolve error " + className
+                    + ": " + t.getMessage());
+        }
+        return Class.forName(className, false, cl);
+    }
+
+    /** 方法级同理：Profile 命中且签名一致则使用，否则回退 getDeclaredMethod。 */
+    private static Method findMethod(XposedModule module, Class<?> cls, String name,
+                                     Class<?> returnType, Class<?>... params)
+            throws NoSuchMethodException {
+        try {
+            TargetProfile profile = ProfileRegistry.active();
+            if (profile != null) {
+                MountSpec spec = profile.findMethodSpec(cls.getName(), name);
+                if (spec != null) {
+                    Method resolved = MountResolver.resolveMethod(spec, cls, cls.getClassLoader());
+                    if (resolved != null
+                            && paramsMatch(resolved.getParameterTypes(), params)
+                            && (returnType == null || returnType == resolved.getReturnType())) {
+                        HookKit.info(module, "ABTEST profile method " + cls.getName() + "#" + name
+                                + " -> " + spec.id);
+                        return resolved;
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            HookKit.warn(module, "ABTEST profile method resolve error "
+                    + cls.getName() + "#" + name + ": " + t.getMessage());
+        }
+        return cls.getDeclaredMethod(name, params);
+    }
+
+    private static boolean paramsMatch(Class<?>[] actual, Class<?>[] expected) {
+        if (actual.length != expected.length) {
+            return false;
+        }
+        for (int i = 0; i < actual.length; i++) {
+            if (actual[i] != expected[i] && !actual[i].equals(expected[i])) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static void hook(XposedModule module, String label, Method m,

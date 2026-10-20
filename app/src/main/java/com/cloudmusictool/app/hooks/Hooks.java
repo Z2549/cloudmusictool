@@ -41,6 +41,7 @@ public final class Hooks {
             }
             HookState.enable(f);
             installOne(module, cl, f, config);
+            HookState.finish(f);
         }
         HookState.flush();
         // ABTest 不是 Feature 开关：始终安装只读观测；forceMap 为空时不改任何返回值。
@@ -64,6 +65,7 @@ public final class Hooks {
         }
         HookState.enable(f);
         installOne(module, cl, f, config);
+        HookState.finish(f);
         HookState.flush();
     }
 

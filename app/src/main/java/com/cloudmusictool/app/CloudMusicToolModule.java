@@ -71,8 +71,8 @@ public class CloudMusicToolModule extends XposedModule {
 
         try {
             Config config = Config.load(this);
-            String targetVersion = VersionGate.resolveVersionName(param);
-            if (!VersionGate.checkVersion(this, targetVersion, config.allowUnsupportedVersion())) {
+            // 版本门禁 + 选择活动 Profile（9.6.08 -> Profile9608；未适配 -> 回退硬编码）。
+            if (!VersionGate.prepareProfile(this, param, config.allowUnsupportedVersion())) {
                 detach();
                 return;
             }

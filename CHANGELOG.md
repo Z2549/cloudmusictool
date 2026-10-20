@@ -1,5 +1,50 @@
 # Changelog
 
+## 2.0.0 - 2026-10-20
+
+多版本架构版（versionCode 5）。
+真机环境：25102RKBEC / Android 17 / LSPosed 2.2.1 / 网易云音乐 9.6.08。
+
+### 架构
+
+- **Profile / MountSpec**：把 9.6.08 的类名、方法名、参数/返回描述符、DexKit 锚点收口到
+  `app/src/main/java/com/cloudmusictool/app/profile/`。`TargetProfile` 按版本聚合，
+  `ProfileRegistry` 按 versionCode/versionName 选择，`MountResolver` 精确类名优先、
+  DexKit 锚点兜底，`TypeResolver` 负责 JVM 描述符解析。
+- **分片维护**：`ProfileAdPv` 覆盖 AD-01~AD-10、PV-01~PV-07 与 ABTEST 观测点；
+  `ProfileUi` 覆盖 UI-01~UI-15（UI-04 blocked，无挂载点）。
+- **critical 降级**：`HookState` 的 `expected = installed + failed`（attempted），
+  critical 挂载点失败时置 `degraded`，`installed == 0` 时置 `unavailable`；
+  设置页状态卡与诊断卡显示「降级」「不可用」，旧版回写没有字段时保持原文案。
+- **共用清单**：`ProfileExportTest` 导出 `app/build/profile9608.json`；
+  `tools/check-mounts.sh` v2 直接读取该文件，先断言 `versionCode=9006008`，
+  再按 `classes` / `methods` 表校验类 descriptor、方法参数与返回类型，
+  输出 `OK` / `GONE` / `ERROR`，支持 `--apk` / `--dexsql` / `--profile` / `--allow-version`
+  与同名环境变量。
+
+### 行为等价
+
+- 只搬坐标，不改 hook 体、返回值、日志与开关语义；9.6.08 上功能与 1.2.0 一致。
+- 仍只适配 9.6.08；未适配版本继续由 `VersionGate` 拦截。
+- 不新增 VIP/付费/版权/地区/青少年/登录/Cookie/风控相关逻辑。
+
+### 验证
+
+- 9.6.08 导出 **134 个挂载点**（UI 63 + AD/PV/ABTEST 71），每个 Feature 至少一个 critical。
+- `bash tools/check-mounts.sh`：`OK=134 GONE=0 ERROR=0`。
+- `:app:testDebugUnitTest`、`:app:lintDebug`、`:app:assembleRelease` 通过。
+- 真机冷启动：`profile mounts=134`；110 条 registered 与 1.2.0 逐行一致，关键 hit 一致；
+  状态卡 `installed=104 / expected=104`、`degradedFeatures=0`；无 FATAL/ANR。
+- 全程未 reboot，只 `am force-stop` 目标进程。
+
+### 已知限制
+
+- UI-04 侧栏抽屉仍无可靠挂载点，保持 blocked。
+- 部分 UI 挂载点没有 DexKit 锚点，只能精确类名匹配；宿主改名时对应子项报告缺失。
+- check-mounts 需要 `aapt2`、`dexsql`，以及 `python3/python` 或 `jq` 之一。
+
+---
+
 ## 1.2.0 - 2026-10-20
 
 ABTest 实验控制版（versionCode 4）。真机环境：25102RKBEC / Android 17 / LSPosed 2.2.1 / 网易云音乐 9.6.08。

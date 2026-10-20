@@ -169,9 +169,25 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         if (enabled == 0) {
             return null;
         }
-        return getString(R.string.status_detail_injected,
+        String summary = getString(R.string.status_detail_injected,
                 root.optInt("expected", 0),
                 root.optInt("noHitFeatures", 0));
+        String health = healthSummary(root);
+        return health == null ? summary : summary + "\n" + health;
+    }
+
+    /**
+     * Profile 降级/不可用摘要。
+     * 旧版 HookState 没有 degradedFeatures/unavailableFeatures 字段，
+     * optInt 默认 0，此时返回 null，状态卡保持旧文案。
+     */
+    private String healthSummary(JSONObject root) {
+        int degraded = root.optInt("degradedFeatures", 0);
+        int unavailable = root.optInt("unavailableFeatures", 0);
+        if (degraded == 0 && unavailable == 0) {
+            return null;
+        }
+        return getString(R.string.status_detail_health, degraded, unavailable);
     }
 
     /** 诊断卡：每项 installed/expected/hit/最近失败原因。 */
@@ -193,6 +209,10 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             sb.append(getString(R.string.status_detail_injected,
                     root.optInt("expected", 0),
                     root.optInt("noHitFeatures", 0)));
+            String health = healthSummary(root);
+            if (health != null) {
+                sb.append('\n').append(health);
+            }
         }
         JSONObject features = root.optJSONObject("features");
         if (features != null) {
@@ -205,6 +225,12 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                         .append(o.optInt("installed", 0)).append('/')
                         .append(o.optInt("expected", 0))
                         .append(o.optBoolean("hit", false) ? " · 已命中" : " · 未命中");
+                if (o.optBoolean("degraded", false)) {
+                    sb.append(" · ").append(getString(R.string.status_mark_degraded));
+                }
+                if (o.optBoolean("unavailable", false)) {
+                    sb.append(" · ").append(getString(R.string.status_mark_unavailable));
+                }
                 String failure = o.optString("lastFailure", null);
                 if (failure != null && !failure.isEmpty()) {
                     sb.append(" · ").append(failure);

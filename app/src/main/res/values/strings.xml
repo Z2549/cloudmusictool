@@ -20,6 +20,9 @@
     <string name="status_detail_connecting">绑定成功后自动刷新</string>
     <string name="status_detail_unsupported">当前版本 %1$s 未适配（官方适配：9.6.08）</string>
     <string name="status_detail_injected">本次尝试 %1$d 个挂载点，%2$d 项未命中</string>
+    <string name="status_detail_health">Profile 适配：降级 %1$d 项 · 不可用 %2$d 项</string>
+    <string name="status_mark_degraded">降级</string>
+    <string name="status_mark_unavailable">不可用</string>
     <string name="status_diagnostics_title">诊断</string>
     <string name="status_diagnostics_empty">暂无目标进程回写。启动网易云音乐后自动刷新。</string>
     <string name="status_diagnostics_none">未启用任何功能</string>

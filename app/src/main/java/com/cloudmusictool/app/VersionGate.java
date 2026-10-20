@@ -1,8 +1,12 @@
 package com.cloudmusictool.app;
 
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.util.Log;
+
+import com.cloudmusictool.app.profile.ProfileRegistry;
+import com.cloudmusictool.app.profile.TargetProfile;
 
 import io.github.libxposed.api.XposedModule;
 import io.github.libxposed.api.XposedModuleInterface.PackageReadyParam;
@@ -10,12 +14,122 @@ import io.github.libxposed.api.XposedModuleInterface.PackageReadyParam;
 public final class VersionGate {
 
     public static final String SUPPORTED_VERSION = "9.6.08";
+    public static final long SUPPORTED_VERSION_CODE = 9006008L;
     public static final String KEY_ALLOW_UNSUPPORTED = "allow_unsupported_version";
     public static final boolean DEFAULT_ALLOW_UNSUPPORTED = false;
 
     private static final String TAG = "CloudMusicTool";
 
     private VersionGate() {
+    }
+
+    /**
+     * 读取目标网易云音乐 versionCode。
+     *
+     * 优先 PackageReadyParam.getApplicationInfo().getLongVersionCode()；该 API 在部分
+     * compileSdk stub 中不可直接引用，因此用反射调用（运行时存在即生效）。
+     * 失败后回退 PackageManager.getPackageInfo(...).getLongVersionCode()；再失败返回 -1，
+     * 由调用方回退 versionName。
+     */
+    public static long resolveVersionCode(PackageReadyParam param) {
+        if (param == null) {
+            return -1L;
+        }
+        try {
+            ApplicationInfo info = param.getApplicationInfo();
+            if (info != null) {
+                java.lang.reflect.Method m =
+                        ApplicationInfo.class.getMethod("getLongVersionCode");
+                Object value = m.invoke(info);
+                if (value instanceof Number) {
+                    return ((Number) value).longValue();
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        try {
+            Context ctx = targetContext();
+            if (ctx != null) {
+                PackageInfo pi = ctx.getPackageManager()
+                        .getPackageInfo(param.getPackageName(), 0);
+                if (pi != null) {
+                    return pi.getLongVersionCode();
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return -1L;
+    }
+
+    /** 反射 ActivityThread 取当前应用/系统 Context，失败返回 null。 */
+    private static Context targetContext() {
+        try {
+            Class<?> at = Class.forName("android.app.ActivityThread");
+            Object currentAt = at.getMethod("currentActivityThread").invoke(null);
+            if (currentAt == null) {
+                return null;
+            }
+            Object app = at.getMethod("getApplication").invoke(currentAt);
+            if (app instanceof Context) {
+                return (Context) app;
+            }
+            Object systemCtx = at.getMethod("getSystemContext").invoke(currentAt);
+            if (systemCtx instanceof Context) {
+                return (Context) systemCtx;
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    /**
+     * 版本门禁 + 活动 Profile 选择。
+     *
+     * 1) versionCode 可读：9006008 激活 Profile 并放行；未适配时按 allowUnsupported
+     *    best-effort（active=null，回退硬编码）或跳过。
+     * 2) versionCode 不可读：回退原有 versionName 逻辑（未知 fail-open，未适配看 allowUnsupported）。
+     *
+     * 返回 false 时调用方应 detach()，不安装任何 hook。
+     */
+    public static boolean prepareProfile(XposedModule module, PackageReadyParam param,
+                                         boolean allowUnsupported) {
+        long versionCode = resolveVersionCode(param);
+        if (versionCode > 0) {
+            TargetProfile profile = ProfileRegistry.forVersionCode(versionCode);
+            if (profile != null) {
+                ProfileRegistry.setActive(profile);
+                module.log(Log.INFO, TAG, "target version matched: " + versionCode
+                        + " (" + profile.versionName + ")");
+                module.log(Log.INFO, TAG, "profile mounts=" + profile.mounts.size()
+                        + " versionCode=" + versionCode);
+                return true;
+            }
+            ProfileRegistry.setActive(null);
+            if (allowUnsupported) {
+                module.log(Log.WARN, TAG, "target versionCode unsupported (" + versionCode
+                        + "), but allow_unsupported_version is enabled; best-effort with hardcoded mounts");
+                return true;
+            }
+            module.log(Log.WARN, TAG, "target versionCode unsupported: " + versionCode
+                    + " (supported: " + SUPPORTED_VERSION_CODE + "), skipping hooks");
+            return false;
+        }
+
+        // versionCode 不可读：保留原有 versionName 兜底逻辑。
+        String versionName = resolveVersionName(param);
+        if (versionName != null) {
+            TargetProfile profile = ProfileRegistry.forVersionName(versionName);
+            if (profile != null) {
+                ProfileRegistry.setActive(profile);
+                module.log(Log.INFO, TAG, "target version matched: " + versionName
+                        + " (versionCode unavailable)");
+                module.log(Log.INFO, TAG, "profile mounts=" + profile.mounts.size()
+                        + " versionName=" + versionName);
+                return true;
+            }
+        }
+        ProfileRegistry.setActive(null);
+        return checkVersion(module, versionName, allowUnsupported);
     }
 
     /**

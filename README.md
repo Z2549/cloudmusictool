@@ -2,8 +2,9 @@
 
 网易云音乐 Android 客户端的 LSPosed 体验优化模块：去广告、精简界面、收敛弹窗、隐私加固。
 
-> 当前版本 **1.2.0**（2026-10-20，versionCode 4）。已在 25102RKBEC 真机验证
+> 当前版本 **2.0.0**（2026-10-20，versionCode 5）。已在 25102RKBEC 真机验证
 > （Android 17 / LSPosed 2.2.1 / 网易云音乐 9.6.08）。
+> 2.0.0 把挂载点坐标抽离为 Profile，功能与 1.2.0 行为等价，仍只适配 9.6.08。
 > 与网易官方无任何关联，仅供学习研究和个人设备使用。
 
 **仓库**：<https://github.com/yigenhuobah/cloudmusictool> ｜ **下载**：[Releases](https://github.com/yigenhuobah/cloudmusictool/releases)
@@ -91,6 +92,18 @@ UI-02（频道 6→1）、PV-06（开启后 `utils.h2#d` 注册，关闭后恢�
 其余新功能为“已注册、未自然触发”，未做完整的五步验证，详见
 [`docs/phase2/1.1.0-VERIFY-A.md`](docs/phase2/1.1.0-VERIFY-A.md)。
 
+## 2.0.0 架构版（开发中）
+
+- 挂载点坐标收口到 `app/src/main/java/com/cloudmusictool/app/profile/`：
+  `MountSpec` 描述坐标，`TargetProfile` 按版本聚合，`ProfileRegistry` 选择版本，
+  `MountResolver` 精确类名优先、DexKit 锚点兜底。
+- `ProfileUi` 覆盖 UI-01~UI-15（UI-04 blocked），`ProfileAdPv` 覆盖 AD/PV/ABTEST；
+  9.6.08 共 133 个挂载点（UI 63 + AD/PV/ABTEST 70），每个 Feature 至少一个 critical。
+- `ProfileExportTest` 导出 `app/build/profile9608.json`；`tools/check-mounts.sh` 直接读取该文件，
+  断言 versionCode、类 descriptor、方法参数/返回类型，输出 OK/GONE/ERROR。
+- 行为与 1.2.0 等价：只搬坐标，不改 hook 体；仍只适配 9.6.08。
+- 详见 [`docs/phase2/2.0.0-ARCH.md`](docs/phase2/2.0.0-ARCH.md)。
+
 ## 已知限制
 - **只适配 9.6.08**。其他版本默认跳过；高级配置 `allow_unsupported_version` 可尝试 best-effort，但不保证。
 - 广告由服务端下发，模块只能阻止展示/上报，不能阻止接口请求。
@@ -112,8 +125,11 @@ UI-02（频道 6→1）、PV-06（开启后 `utils.h2#d` 注册，关闭后恢�
 环境：JDK 17、Android SDK Platform 36、Gradle wrapper 8.13、AGP 8.12.2。
 
 ```bash
-# 单元测试
+# 单元测试（含 ProfileExportTest，导出 app/build/profile9608.json）
 gradlew.bat :app:testDebugUnitTest
+
+# 挂载点体检（默认 APK/dexsql 见脚本头部；输出 OK/GONE/ERROR）
+bash tools/check-mounts.sh
 
 # debug
 gradlew.bat :app:assembleDebug

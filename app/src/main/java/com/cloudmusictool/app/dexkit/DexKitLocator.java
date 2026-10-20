@@ -282,7 +282,7 @@ public final class DexKitLocator {
                 } catch (Throwable t) {
                     continue;
                 }
-                if (c == null || !isTargetClass(c.getName())) {
+                if (c == null || !isTargetClass(c, cl)) {
                     continue;
                 }
                 targetCandidates.add(c);
@@ -306,7 +306,7 @@ public final class DexKitLocator {
                         + " target-package candidates for " + className + "; refusing to guess");
                 return null;
             } else {
-                Log.w(TAG, "DexKit findClass: no candidate in com.netease.cloudmusic for " + className);
+                Log.w(TAG, "DexKit findClass: no candidate in target package/classloader for " + className);
                 return null;
             }
 
@@ -326,9 +326,25 @@ public final class DexKitLocator {
         return null;
     }
 
-    private static boolean isTargetClass(String name) {
-        return name != null && (name.equals("com.netease.cloudmusic")
-                || name.startsWith("com.netease.cloudmusic."));
+    /**
+     * 候选类归属校验，与 MountResolver 保持一致：
+     * - com.netease.* 直接接受；
+     * - 混淆后的顶层类（q60.w0、dr.h、fw0.e 等）不在 com.netease 下，
+     *   以“由宿主 ClassLoader 加载”作为归属依据；
+     * - 模块自身类（com.cloudmusictool.*）一律排除。
+     */
+    private static boolean isTargetClass(Class<?> cls, ClassLoader cl) {
+        if (cls == null) {
+            return false;
+        }
+        String name = cls.getName();
+        if (name == null || name.startsWith("com.cloudmusictool.")) {
+            return false;
+        }
+        if (name.startsWith("com.netease.")) {
+            return true;
+        }
+        return cl != null && cls.getClassLoader() == cl;
     }
 
     private static String simpleName(String className) {

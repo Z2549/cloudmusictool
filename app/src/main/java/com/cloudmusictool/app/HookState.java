@@ -57,9 +57,16 @@ public final class HookState {
         final AtomicInteger expected = new AtomicInteger();
         final AtomicInteger installed = new AtomicInteger();
         final AtomicInteger failed = new AtomicInteger();
+        /** 失败的挂载点中，Profile 标记为 critical 的数量（按 label 去重）。 */
+        final AtomicInteger criticalFailed = new AtomicInteger();
         final AtomicInteger hitCount = new AtomicInteger();
         final Set<String> failedKeys = ConcurrentHashMap.newKeySet();
+        final Set<String> criticalFailedKeys = ConcurrentHashMap.newKeySet();
         volatile boolean hit;
+        /** critical 挂载点失败 -> 功能降级。 */
+        volatile boolean degraded;
+        /** 一个挂载点都没装上 -> 功能不可用。 */
+        volatile boolean unavailable;
         volatile String lastFailure;
         volatile long lastFailureAt;
 
@@ -107,6 +114,22 @@ public final class HookState {
         publish();
     }
 
+    /**
+     * 安装结束后结算健康状态。
+     * - unavailable：一个挂载点都没装上；
+     * - degraded：Profile 中标记为 critical 的挂载点有失败。
+     * expected 始终由 attempted() 维护（installed + failed），保证诊断卡比例自洽。
+     */
+    public static void finish(Feature f) {
+        if (f == null) {
+            return;
+        }
+        State s = state(f);
+        s.unavailable = s.installed.get() == 0;
+        s.degraded = s.criticalFailed.get() > 0;
+        publish();
+    }
+
     /** 兼容旧调用：无 label 时每次都计数。 */
     public static void markNotFound(Feature f) {
         markNotFound(f, null);
@@ -116,14 +139,29 @@ public final class HookState {
      * 同一 Feature 的同一 mount label 只记一次失败，避免 findClass/findMethod 两步查找重复计数。
      */
     public static void markNotFound(Feature f, String label) {
+        markNotFound(f, label, false);
+    }
+
+    /**
+     * 同上，并标记该挂载点是否为 Profile 中的 critical。
+     * critical 标记单独去重：即使 failed 已计过，也只在首次标记 critical 时累加。
+     */
+    public static void markNotFound(Feature f, String label, boolean critical) {
         if (f == null) {
             return;
         }
         State s = state(f);
         if (label != null && !s.failedKeys.add(label)) {
+            if (critical && s.criticalFailedKeys.add(label)) {
+                s.criticalFailed.incrementAndGet();
+                publish();
+            }
             return;
         }
         s.failed.incrementAndGet();
+        if (critical && (label == null || s.criticalFailedKeys.add(label))) {
+            s.criticalFailed.incrementAndGet();
+        }
         s.attempted();
         publish();
     }
@@ -168,6 +206,8 @@ public final class HookState {
             int expected = 0;
             int failed = 0;
             int noHit = 0;
+            int degradedCount = 0;
+            int unavailableCount = 0;
             for (Feature f : Feature.values()) {
                 State s = sStates.get(f);
                 if (s == null) {
@@ -179,8 +219,11 @@ public final class HookState {
                 o.put("expected", s.expected.get());
                 o.put("installed", s.installed.get());
                 o.put("failed", s.failed.get());
+                o.put("criticalFailed", s.criticalFailed.get());
                 o.put("hit", s.hit);
                 o.put("hitCount", s.hitCount.get());
+                o.put("degraded", s.degraded);
+                o.put("unavailable", s.unavailable);
                 if (s.lastFailure != null) {
                     o.put("lastFailure", s.lastFailure);
                 }
@@ -190,6 +233,12 @@ public final class HookState {
                     installed += s.installed.get();
                     expected += s.expected.get();
                     failed += s.failed.get();
+                    if (s.degraded) {
+                        degradedCount++;
+                    }
+                    if (s.unavailable) {
+                        unavailableCount++;
+                    }
                     if (!s.hit && s.expected.get() > 0) {
                         noHit++;
                     }
@@ -201,6 +250,8 @@ public final class HookState {
             root.put("expected", expected);
             root.put("failed", failed);
             root.put("noHitFeatures", noHit);
+            root.put("degradedFeatures", degradedCount);
+            root.put("unavailableFeatures", unavailableCount);
             root.put("features", features);
             String json = root.toString();
             if (json.length() > MAX_JSON_CHARS) {
@@ -212,6 +263,8 @@ public final class HookState {
                 compact.put("expected", expected);
                 compact.put("failed", failed);
                 compact.put("noHitFeatures", noHit);
+                compact.put("degradedFeatures", degradedCount);
+                compact.put("unavailableFeatures", unavailableCount);
                 compact.put("truncated", true);
                 return compact.toString();
             }

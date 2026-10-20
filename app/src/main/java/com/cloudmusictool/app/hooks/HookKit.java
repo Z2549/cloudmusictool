@@ -6,6 +6,11 @@ import com.cloudmusictool.app.Config;
 import com.cloudmusictool.app.Feature;
 import com.cloudmusictool.app.HookState;
 import com.cloudmusictool.app.dexkit.DexKitLocator;
+import com.cloudmusictool.app.profile.MountResolver;
+import com.cloudmusictool.app.profile.MountSpec;
+import com.cloudmusictool.app.profile.ProfileRegistry;
+import com.cloudmusictool.app.profile.TargetProfile;
+import com.cloudmusictool.app.profile.TypeResolver;
 
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
@@ -55,6 +60,12 @@ final class HookKit {
                 && f == Feature.SPLASH_AD
                 && LOADING_AD_MANAGER.equals(name);
         if (!selftest) {
+            // 1) 优先用活动 Profile 的坐标（多版本架构）。
+            Class<?> profiled = resolveProfileClass(module, f, cl, name);
+            if (profiled != null) {
+                return profiled;
+            }
+            // 2) Profile 未命中/解析失败：保持原有硬编码路径。
             try {
                 return Class.forName(name, false, cl);
             } catch (Throwable ignored) {
@@ -84,7 +95,7 @@ final class HookKit {
             warn(module, "DexKit selftest requested but no anchors for " + name);
         }
         warn(module, f.id + " skip: class not found " + name);
-        HookState.markNotFound(f, "class:" + name);
+        HookState.markNotFound(f, "class:" + name, isCriticalMount(name, null));
         HookState.note(f, "类未找到 " + name);
         return null;
     }
@@ -93,9 +104,203 @@ final class HookKit {
         return findClass(module, f, cl, name, (String[]) null);
     }
 
+    /**
+     * 按活动 Profile 解析类；无 Profile / 无该坐标 / 解析失败均返回 null，
+     * 由调用方继续走原有硬编码 + DexKit 路径。不在此处登记 HookState，避免重复计数。
+     */
+    private static Class<?> resolveProfileClass(XposedModule module, Feature f, ClassLoader cl, String name) {
+        try {
+            TargetProfile profile = ProfileRegistry.active();
+            if (profile == null) {
+                return null;
+            }
+            MountSpec spec = profile.findClassSpec(name);
+            if (spec == null) {
+                return null;
+            }
+            Class<?> resolved = MountResolver.resolveClass(spec, cl);
+            if (resolved != null) {
+                info(module, f.id + " profile class " + name + " -> " + spec.id);
+            }
+            return resolved;
+        } catch (Throwable t) {
+            warn(module, f.id + " profile class resolve error " + name + ": " + t.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 按活动 Profile 解析方法；解析结果必须与调用方期望的参数/返回类型一致，
+     * 否则返回 null 交给原有逻辑，避免 Profile 与 hook 期望漂移时误挂。
+     */
+    private static Method resolveProfileMethod(XposedModule module, Feature f, Class<?> cls,
+                                               String name, Class<?> returnType, Class<?>[] params) {
+        if (cls == null) {
+            return null;
+        }
+        try {
+            MountSpec spec = findBestMethodSpec(cls, name, params);
+            if (spec == null) {
+                return null;
+            }
+            Method resolved = MountResolver.resolveMethod(spec, cls, cls.getClassLoader());
+            if (resolved == null) {
+                return null;
+            }
+            if (params != null && !sameParams(resolved.getParameterTypes(), params)) {
+                return null;
+            }
+            if (returnType != null && !sameType(returnType, resolved.getReturnType())) {
+                return null;
+            }
+            info(module, f.id + " profile method " + cls.getName() + "#" + name + " -> " + spec.id);
+            return resolved;
+        } catch (Throwable t) {
+            warn(module, f.id + " profile method resolve error "
+                    + cls.getName() + "#" + name + ": " + t.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 无 module/feature 上下文的 Profile 方法解析，供 findMethodQuiet / findByNameQuiet 使用。
+     * 命中后同样校验参数/返回类型，失败返回 null 由调用方回退。
+     */
+    private static Method resolveProfileMethodQuiet(Class<?> cls, String name,
+                                                    Class<?> returnType, Class<?>[] params) {
+        if (cls == null) {
+            return null;
+        }
+        try {
+            MountSpec spec = findBestMethodSpec(cls, name, params);
+            if (spec == null) {
+                return null;
+            }
+            Method resolved = MountResolver.resolveMethod(spec, cls, cls.getClassLoader());
+            if (resolved == null) {
+                return null;
+            }
+            if (params != null && !sameParams(resolved.getParameterTypes(), params)) {
+                return null;
+            }
+            if (returnType != null && !sameType(returnType, resolved.getReturnType())) {
+                return null;
+            }
+            Log.i(TAG, "profile method " + cls.getName() + "#" + name
+                    + " -> " + spec.id + " (quiet)");
+            return resolved;
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    /**
+     * 在 Profile 中找 (class, method) 坐标；params 非空时优先返回参数完全匹配的重载，
+     * 没有精确匹配则返回第一个同名坐标（由调用方校验后决定是否回退）。
+     */
+    private static MountSpec findBestMethodSpec(Class<?> cls, String name, Class<?>[] params) {
+        TargetProfile profile = ProfileRegistry.active();
+        if (profile == null) {
+            return null;
+        }
+        String className = cls.getName();
+        ClassLoader cl = cls.getClassLoader();
+        MountSpec first = null;
+        for (MountSpec spec : profile.mounts) {
+            if (!name.equals(spec.methodName) || spec.classCandidates == null) {
+                continue;
+            }
+            boolean classMatch = false;
+            for (String candidate : spec.classCandidates) {
+                if (className.equals(candidate)) {
+                    classMatch = true;
+                    break;
+                }
+            }
+            if (!classMatch) {
+                continue;
+            }
+            if (first == null) {
+                first = spec;
+            }
+            if (params == null) {
+                return spec;
+            }
+            if (spec.paramTypes == null || spec.paramTypes.length != params.length) {
+                continue;
+            }
+            boolean match = true;
+            for (int i = 0; i < params.length; i++) {
+                Class<?> expected = TypeResolver.resolve(spec.paramTypes[i], cl);
+                if (expected == null || !sameType(expected, params[i])) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match) {
+                return spec;
+            }
+        }
+        return first;
+    }
+
+    private static boolean sameParams(Class<?>[] actual, Class<?>[] expected) {
+        if (actual.length != expected.length) {
+            return false;
+        }
+        for (int i = 0; i < actual.length; i++) {
+            if (!sameType(expected[i], actual[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean sameType(Class<?> a, Class<?> b) {
+        return a == b || a.equals(b);
+    }
+
+    /**
+     * 判断失败的挂载点是否 critical。
+     * 类级失败：该类任一坐标 critical 即视为 critical（类缺失会带走全部方法）。
+     * 方法级失败：只认精确的 (class, method) 坐标。
+     * 无 Profile / 未收录的挂载点一律非 critical，不触发降级。
+     */
+    private static boolean isCriticalMount(String className, String methodName) {
+        if (className == null) {
+            return false;
+        }
+        try {
+            TargetProfile profile = ProfileRegistry.active();
+            if (profile == null) {
+                return false;
+            }
+            if (methodName != null) {
+                MountSpec spec = profile.findMethodSpec(className, methodName);
+                return spec != null && spec.critical;
+            }
+            for (MountSpec spec : profile.mounts) {
+                if (spec.classCandidates == null) {
+                    continue;
+                }
+                for (String candidate : spec.classCandidates) {
+                    if (className.equals(candidate) && spec.critical) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
     static Method findMethod(XposedModule module, Feature f, Class<?> cls, String name,
                              Class<?> returnType, Class<?>[] params, String... anchors) {
-        Method m = findMethodQuiet(cls, name, params);
+        Method m = resolveProfileMethod(module, f, cls, name, returnType, params);
+        if (m == null) {
+            m = findMethodQuiet(cls, name, params);
+        }
         if (m == null && cls != null && anchors != null && anchors.length > 0) {
             try {
                 ClassLoader cl = cls.getClassLoader();
@@ -109,9 +314,10 @@ final class HookKit {
             }
         }
         if (m == null) {
-            warn(module, f.id + " skip: method not found "
-                    + (cls == null ? "?" : cls.getName()) + "#" + name);
-            HookState.markNotFound(f, "method:" + (cls == null ? "?" : cls.getName()) + "#" + name);
+            String clsName = cls == null ? "?" : cls.getName();
+            warn(module, f.id + " skip: method not found " + clsName + "#" + name);
+            HookState.markNotFound(f, "method:" + clsName + "#" + name,
+                    isCriticalMount(cls == null ? null : clsName, name));
             HookState.note(f, "方法未找到 " + name);
         }
         return m;
@@ -123,11 +329,15 @@ final class HookKit {
     }
 
     static Method findMethod(XposedModule module, Feature f, Class<?> cls, String name) {
-        Method m = findByNameQuiet(cls, name);
+        Method m = resolveProfileMethod(module, f, cls, name, null, null);
         if (m == null) {
-            warn(module, f.id + " skip: method not found "
-                    + (cls == null ? "?" : cls.getName()) + "#" + name);
-            HookState.markNotFound(f, "method:" + (cls == null ? "?" : cls.getName()) + "#" + name);
+            m = findByNameQuiet(cls, name);
+        }
+        if (m == null) {
+            String clsName = cls == null ? "?" : cls.getName();
+            warn(module, f.id + " skip: method not found " + clsName + "#" + name);
+            HookState.markNotFound(f, "method:" + clsName + "#" + name,
+                    isCriticalMount(cls == null ? null : clsName, name));
             HookState.note(f, "方法未找到 " + name);
         }
         return m;
@@ -135,7 +345,10 @@ final class HookKit {
 
     static Method findMethodWithAnchors(XposedModule module, Feature f, Class<?> cls, String name,
                                         String... anchors) {
-        Method m = findByNameQuiet(cls, name);
+        Method m = resolveProfileMethod(module, f, cls, name, null, null);
+        if (m == null) {
+            m = findByNameQuiet(cls, name);
+        }
         if (m == null && cls != null && anchors != null && anchors.length > 0) {
             try {
                 ClassLoader cl = cls.getClassLoader();
@@ -149,9 +362,10 @@ final class HookKit {
             }
         }
         if (m == null) {
-            warn(module, f.id + " skip: method not found "
-                    + (cls == null ? "?" : cls.getName()) + "#" + name);
-            HookState.markNotFound(f, "method:" + (cls == null ? "?" : cls.getName()) + "#" + name);
+            String clsName = cls == null ? "?" : cls.getName();
+            warn(module, f.id + " skip: method not found " + clsName + "#" + name);
+            HookState.markNotFound(f, "method:" + clsName + "#" + name,
+                    isCriticalMount(cls == null ? null : clsName, name));
             HookState.note(f, "方法未找到 " + name);
         }
         return m;
@@ -160,6 +374,10 @@ final class HookKit {
     static Method findByNameQuiet(Class<?> cls, String name) {
         if (cls == null) {
             return null;
+        }
+        Method profiled = resolveProfileMethodQuiet(cls, name, null, null);
+        if (profiled != null) {
+            return profiled;
         }
         try {
             Method found = null;
@@ -238,6 +456,10 @@ final class HookKit {
         if (cls == null) {
             return null;
         }
+        Method profiled = resolveProfileMethodQuiet(cls, name, null, params);
+        if (profiled != null) {
+            return profiled;
+        }
         try {
             return cls.getDeclaredMethod(name, params);
         } catch (Throwable t) {
@@ -272,7 +494,7 @@ final class HookKit {
             return true;
         } catch (Throwable t) {
             error(module, f.id + " hook failed " + label, t);
-            HookState.markNotFound(f, "hook:" + label);
+            HookState.markNotFound(f, "hook:" + label, isCriticalExecutable(m));
             HookState.note(f, "hook 失败 " + label);
             return false;
         }
@@ -292,7 +514,7 @@ final class HookKit {
             if (rt != boolean.class && rt != Boolean.class) {
                 warn(module, f.id + " return type mismatch: " + label + " -> "
                         + rt.getName() + " (constBool requires boolean); not installed");
-                HookState.markNotFound(f, "rettype:" + label);
+                HookState.markNotFound(f, "rettype:" + label, isCriticalExecutable(m));
                 HookState.note(f, "返回类型不匹配 " + label);
                 return false;
             }
@@ -300,12 +522,21 @@ final class HookKit {
             if (rt.isPrimitive() && rt != void.class) {
                 warn(module, f.id + " return type mismatch: " + label + " -> "
                         + rt.getName() + " (skipVoid cannot return null); not installed");
-                HookState.markNotFound(f, "rettype:" + label);
+                HookState.markNotFound(f, "rettype:" + label, isCriticalExecutable(m));
                 HookState.note(f, "返回类型不匹配 " + label);
                 return false;
             }
         }
         return true;
+    }
+
+    /** hook 安装失败时判断该 Executable 是否对应 Profile 中的 critical 坐标。 */
+    private static boolean isCriticalExecutable(Executable m) {
+        if (!(m instanceof Method)) {
+            return false;
+        }
+        Method method = (Method) m;
+        return isCriticalMount(method.getDeclaringClass().getName(), method.getName());
     }
 
     static void hit(XposedModule module, Feature f, String detail) {
