@@ -25,3 +25,7 @@ Thumbs.db
 # 日志 / 崩溃
 *.log
 captures/
+
+# 发布产物（仅上传 Release，不入库）
+dist/*.txt
+dist/*.md
