@@ -24,6 +24,16 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory android:title="@string/about_icon_title">
+
+        <com.cloudmusictool.app.MaterialSwitchPreference
+            android:icon="@drawable/ic_launcher_visibility"
+            android:key="about_hide_icon"
+            android:summary="@string/about_hide_icon_summary"
+            android:title="@string/about_hide_icon_title" />
+
+    </PreferenceCategory>
+
     <PreferenceCategory android:title="@string/about_disclaimer_title">
 
         <Preference

@@ -170,4 +170,10 @@
     <string name="about_disclaimer_content">本模块为开源 Xposed/LSPosed 模块，所有代码仅供学习研究、代码逆向工程实践及个人无障碍体验改善之用。严禁用于任何商业目的、付费破解或绕过版权保护行为。因使用本模块产生的一切后果均由使用者自行承担。</string>
     <string name="about_source_title">开源主页</string>
     <string name="about_source_url">https://github.com/yigenhuobah/cloudmusictool</string>
+    <string name="about_icon_title">桌面图标</string>
+    <string name="about_hide_icon_title">隐藏桌面图标</string>
+    <string name="about_hide_icon_summary">隐藏后桌面与应用抽屉里不再显示本模块图标。本页仍可从 LSPosed 管理器打开，回来关掉此开关即可恢复。</string>
+    <string name="about_hide_icon_toast_hidden">桌面图标已隐藏，可从 LSPosed 管理器重新打开本页</string>
+    <string name="about_hide_icon_toast_shown">桌面图标已恢复</string>
+    <string name="about_hide_icon_failed">修改桌面图标失败，请重试</string>
 </resources>
