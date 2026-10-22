@@ -36,6 +36,18 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      # 仓库里没有 keystore.properties 时 release 会 initWith debug，
+      # 而 CI 容器里没有 ~/.android/debug.keystore，会报
+      # "Keystore file '.../debug.keystore' not found for signing config 'release'"。
+      # ci/debug.keystore 是固定生成的公开 debug key（storepass/keypass 都是 android），
+      # 每次构建签名一致，装新包可以直接覆盖旧的。
+      - name: Prepare debug keystore
+        run: |
+          echo "ANDROID_USER_HOME=$GITHUB_WORKSPACE/.ci-android" >> "$GITHUB_ENV"
+          mkdir -p "$GITHUB_WORKSPACE/.ci-android" "$HOME/.android"
+          cp ci/debug.keystore "$GITHUB_WORKSPACE/.ci-android/debug.keystore"
+          cp ci/debug.keystore "$HOME/.android/debug.keystore"
+
       - name: Build release APK
         run: |
           # 仓库里的 gradlew 没有可执行位（作者在 Windows 上提交的），先补上
